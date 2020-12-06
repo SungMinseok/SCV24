@@ -36,49 +36,67 @@ public class PlayerManager : MonoBehaviour
     Slider fuelBar;
     Text mineralBar;
 
-    public float speed = 2f;
-    public float runSpeed = 4f;
-    private float defaultSpeed;
+    //public float runSpeed = 4f;
+    //private float defaultSpeed;
 
-    public float maxFuel;
     public float curFuel;
     private float calculatedFuel;
 
     public float fuelUsagePerWalk = 1f;
     public float fuelUsagePerRun = 2f;
 
-    public float miningSpeed = 5f;
+    //public float miningSpeed = 5f;
+    
+    [Header("장비 초기값")]
+    public float defaultWeldingSec;
+    public float defaultSpeed;
+    public float defaultFuel;
+    public int defaultCapacity;
 
-    Rigidbody2D rb;
-    SpriteRenderer sr;
-    Animator animator;
+    [Header("장비 단계")]
+    public int weldingLevel;
+    public float weldingSec = 2f;
+    public int engineLevel;
+    public float speed = 2f;
+    public int fuelLevel;
+    public float maxFuel;
+    public int bodyLevel;
+    public int capacity = 8;//적재량
+
+
+    [HideInInspector]    public Rigidbody2D rb;
+    [HideInInspector]    public SpriteRenderer sr;
+    
+    [HideInInspector] public Animator animator;
     Animator animatorMother;
     Animator animatorChild;
     GameObject booster;
     RaycastHit2D hitTemp;
     private SpriteRenderer[] boosters;
      [SerializeField]private Vector2 defaultSide;
-    Vector2 movement;
-    Vector2 movementDirection;
-    public bool canMove;
-    public bool isAlive;
-    public bool isHolding;//뭔가 들고 있을 때
-    public bool isMining;//채취 중일 때
+        [HideInInspector]public Vector2 movement;
+        [HideInInspector]public Vector2 movementDirection;
+        [HideInInspector]public bool canMove;
+        [HideInInspector]public bool isAlive;
+        [HideInInspector]public bool isHolding;//뭔가 들고 있을 때
+        [HideInInspector]public bool isMining;//채취 중일 때
     private bool miningFlag;
     [Header("이동 관련")]//auto 버튼 눌렀을 때
-    public bool isAuto;
-    public bool autoGathering;  //아무것도 들고 있지 않은 상태 > 미네랄로 감.
-    public bool autoReturnCargo;//미네랄 들고 있는 상태 > 센터로 감.
-    public bool isMoving;
-    public bool gotMine;//미네랄 발견
-    public bool gotCenter;//센터 발견
-    public bool placeFlag;
-    public SpriteRenderer mineral;
-    public GameObject workLight;
-    public Transform destination;
+        [HideInInspector]public bool isAuto;
+       [HideInInspector] public bool autoGathering;  //아무것도 들고 있지 않은 상태 > 미네랄로 감.
+        [HideInInspector]public bool autoReturnCargo;//미네랄 들고 있는 상태 > 센터로 감.
+        [HideInInspector]public bool isMoving;
+        [HideInInspector]public bool gotMine;//미네랄 발견
+        [HideInInspector]public bool gotCenter;//센터 발견
+        [HideInInspector]public bool placeFlag;
+        [HideInInspector]public SpriteRenderer mineral;
+        [HideInInspector]public GameObject workLight;
+        [HideInInspector]public Transform destination;
     IEnumerator miningCoroutine;
     bool onX;
     bool onY;
+    [Header("센터 이동")]//auto 버튼 눌렀을 때
+        [HideInInspector]public bool goToCenter;
     void Start()
     {
         if(type==UnitType.unit){
@@ -102,8 +120,8 @@ public class PlayerManager : MonoBehaviour
             booster.SetActive(false);
             boosters = new SpriteRenderer[3];
             for(int i=0;i<3;i++){
-                Debug.Log(booster.transform.childCount);
-                Debug.Log(booster.transform.GetChild(i).name);
+                //Debug.Log(booster.transform.childCount);
+                //Debug.Log(booster.transform.GetChild(i).name);
                 boosters[i] = booster.transform.GetChild(i).GetComponent<SpriteRenderer>();
             }
             defaultSide = boosters[1].GetComponent<RectTransform>().localPosition;
@@ -111,7 +129,13 @@ public class PlayerManager : MonoBehaviour
         
         animator = GetComponent<Animator>();
         sr = GetComponent<SpriteRenderer>();
-        defaultSpeed = speed;
+        //defaultSpeed = speed;
+
+        //초기설정
+        weldingSec = defaultWeldingSec;
+        speed = defaultSpeed;
+        maxFuel = defaultFuel;
+        capacity = defaultCapacity;
 
         //체력
         fuelBar = UIManager.instance.fuelBar;
@@ -127,117 +151,117 @@ public class PlayerManager : MonoBehaviour
     void Update()
     {
 #region PC 이동
-        if (type == UnitType.unit)
-        {
-            if (canMove && !animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Att"))
+        // if (type == UnitType.unit)
+        // {
+        //     if (canMove && !animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Att"))
         
-            {
+        //     {
                 
 
-                if (Input.GetAxisRaw("Vertical") != 0 && Input.GetAxisRaw("Horizontal") == 0)
-                {//상하 먼저 입력 
-                    onY = true;
-                    onX = false;
-                }
-                else if (Input.GetAxisRaw("Horizontal") != 0 && Input.GetAxisRaw("Vertical") == 0)
-                {//좌우 먼저 입력
-                    onY = false;
-                    onX = true;
-                }
-                else if (Input.GetAxisRaw("Horizontal") == 0 && Input.GetAxisRaw("Vertical") == 0)
-                {
-                    onX = false;
-                    onY = false;
-                }
-                if (onX)
-                {//좌우 누른 상태에서 상하 가능
+        //         if (Input.GetAxisRaw("Vertical") != 0 && Input.GetAxisRaw("Horizontal") == 0)
+        //         {//상하 먼저 입력 
+        //             onY = true;
+        //             onX = false;
+        //         }
+        //         else if (Input.GetAxisRaw("Horizontal") != 0 && Input.GetAxisRaw("Vertical") == 0)
+        //         {//좌우 먼저 입력
+        //             onY = false;
+        //             onX = true;
+        //         }
+        //         else if (Input.GetAxisRaw("Horizontal") == 0 && Input.GetAxisRaw("Vertical") == 0)
+        //         {
+        //             onX = false;
+        //             onY = false;
+        //         }
+        //         if (onX)
+        //         {//좌우 누른 상태에서 상하 가능
 
-                    if (Input.GetAxisRaw("Vertical") != 0)
-                    {
-                        Debug.Log("상하");
-                        movement.x = 0;
-                        movement.y = Input.GetAxisRaw("Vertical");
+        //             if (Input.GetAxisRaw("Vertical") != 0)
+        //             {
+        //                 ////Debug.Log("상하");
+        //                 movement.x = 0;
+        //                 movement.y = Input.GetAxisRaw("Vertical");
 
-                        sr.flipX = false;
+        //                 sr.flipX = false;
 
                      
-                        SetBooster("UPDOWN");       
-                    }
-                    else if (Input.GetAxisRaw("Horizontal") != 0)
-                    {
-                        Debug.Log("좌우");
-                        movement.x = Input.GetAxisRaw("Horizontal");
-                        movement.y = 0;
-                        sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
+        //                 SetBooster("UPDOWN");       
+        //             }
+        //             else if (Input.GetAxisRaw("Horizontal") != 0)
+        //             {
+        //                 ////Debug.Log("좌우");
+        //                 movement.x = Input.GetAxisRaw("Horizontal");
+        //                 movement.y = 0;
+        //                 sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
                         
                      
-                        SetBooster("LEFTRIGHT"); 
+        //                 SetBooster("LEFTRIGHT"); 
 
-                    }
-                }
-                else if (onY)
-                {//상하 누른 상태에서 좌우 가능
-                    if (Input.GetAxisRaw("Horizontal") != 0)
-                    {
-                        Debug.Log("좌우");
-                        movement.x = Input.GetAxisRaw("Horizontal");
-                        movement.y = 0;
+        //             }
+        //         }
+        //         else if (onY)
+        //         {//상하 누른 상태에서 좌우 가능
+        //             if (Input.GetAxisRaw("Horizontal") != 0)
+        //             {
+        //                 //Debug.Log("좌우");
+        //                 movement.x = Input.GetAxisRaw("Horizontal");
+        //                 movement.y = 0;
 
-                        sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
+        //                 sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
 
-                        SetBooster("LEFTRIGHT"); 
-                    }
-                    else if (Input.GetAxisRaw("Vertical") != 0)
-                    {
-                        Debug.Log("상하");
-                        movement.x = 0;
-                        movement.y = Input.GetAxisRaw("Vertical");
+        //                 SetBooster("LEFTRIGHT"); 
+        //             }
+        //             else if (Input.GetAxisRaw("Vertical") != 0)
+        //             {
+        //                 //Debug.Log("상하");
+        //                 movement.x = 0;
+        //                 movement.y = Input.GetAxisRaw("Vertical");
 
-                        sr.flipX = false;
+        //                 sr.flipX = false;
 
-                        SetBooster("UPDOWN");                        
+        //                 SetBooster("UPDOWN");                        
 
-                    }
-                }
-
-
-                if (Input.GetAxisRaw("Horizontal") == 0 && Input.GetAxisRaw("Vertical") == 0)
-                {
-                    movement.x = 0;
-                    movement.y = 0;
-                }
-                if (Input.GetKey(KeyCode.LeftShift) && movement != Vector2.zero)
-                {
-                    rb.MovePosition(rb.position + movement * runSpeed * Time.fixedDeltaTime);
-                    animator.SetFloat("Speed", runSpeed / defaultSpeed / 2);
-                    //curFuel -= fuelUsagePerRun;
-                    HandleFuel(-fuelUsagePerRun);
-                }
-                else if (movement != Vector2.zero)
-                {
-                    rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
-                    animator.SetFloat("Speed", speed / defaultSpeed / 2);
-                   // curFuel -= fuelUsagePerWalk;
-                    HandleFuel(-fuelUsagePerWalk);
-                }
-                else if (movement == Vector2.zero)
-                {
-                    animator.SetFloat("Speed", 0f);
-                }
+        //             }
+        //         }
 
 
-            }
-        }
-        else if(type == UnitType.shadow){
-            animator.SetFloat("Horizontal",animatorMother.GetFloat("Horizontal"));
-            animator.SetFloat("Vertical",animatorMother.GetFloat("Vertical"));
+        //         if (Input.GetAxisRaw("Horizontal") == 0 && Input.GetAxisRaw("Vertical") == 0)
+        //         {
+        //             movement.x = 0;
+        //             movement.y = 0;
+        //         }
+        //         if (Input.GetKey(KeyCode.LeftShift) && movement != Vector2.zero)
+        //         {
+        //             rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+        //             animator.SetFloat("Speed", speed / defaultSpeed / 2);
+        //             //curFuel -= fuelUsagePerRun;
+        //             HandleFuel(-fuelUsagePerRun);
+        //         }
+        //         else if (movement != Vector2.zero)
+        //         {
+        //             rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+        //             animator.SetFloat("Speed", speed / defaultSpeed / 2);
+        //            // curFuel -= fuelUsagePerWalk;
+        //             HandleFuel(-fuelUsagePerWalk);
+        //         }
+        //         else if (movement == Vector2.zero)
+        //         {
+        //             animator.SetFloat("Speed", 0f);
+        //         }
+
+
+        //     }
+        // }
+        // else if(type == UnitType.shadow){
+        //     animator.SetFloat("Horizontal",animatorMother.GetFloat("Horizontal"));
+        //     animator.SetFloat("Vertical",animatorMother.GetFloat("Vertical"));
             
-            sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
+        //     sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
             
-            animator.SetFloat("Speed", animatorMother.GetFloat("Speed"));
+        //     animator.SetFloat("Speed", animatorMother.GetFloat("Speed"));
 
-            //(animator.GetFloat("Horizontal"),animator.GetFloat("Vertical"));
-        }
+        //     //(animator.GetFloat("Horizontal"),animator.GetFloat("Vertical"));
+        // }
 
         
 #endregion
@@ -267,11 +291,15 @@ public class PlayerManager : MonoBehaviour
         
         if (type == UnitType.unit){
             if(isAuto){
-                
-                if(Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0){
+                UIManager.instance.DisableColliders();
+                //goToCenter = false;
+
+                //if(goToCenter || MobileControl.instance.isTouch|| Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0){
+                if(goToCenter || MobileControl.instance.isTouch){
                     isAuto = false;  //오토모드중 움직이면 오토 중지.
-                
+                Debug.Log("11");
                     StopAuto();
+                       //Debug.Log("22");
                 }
                 
                     
@@ -279,8 +307,8 @@ public class PlayerManager : MonoBehaviour
                     
                     //미네랄로 이동
                 if(!isHolding&&!isMining){
-                    Debug.Log("미네랄로 이동");
-                    if(destination==null) destination = GameObject.FindWithTag("Mineral Field").transform;
+                    //Debug.Log("미네랄로 이동");
+                    destination = GameObject.FindWithTag("Mineral Field").transform;
                     
                     if(gotMine){
                         gotMine = false;
@@ -294,11 +322,11 @@ public class PlayerManager : MonoBehaviour
                     // ){
                         
                         
-                        // Debug.Log("1 :" +destination.GetComponent<BoxCollider2D>().bounds.max.y);
-                        // Debug.Log("2 :" +destination.GetComponent<BoxCollider2D>().bounds.min.y);
+                        // //Debug.Log("1 :" +destination.GetComponent<BoxCollider2D>().bounds.max.y);
+                        // //Debug.Log("2 :" +destination.GetComponent<BoxCollider2D>().bounds.min.y);
                         
                         //gotMine = false;
-                        //Debug.Log(Mathf.Abs(transform.position.y - destination.position.y));
+                        ////Debug.Log(Mathf.Abs(transform.position.y - destination.position.y));
                             //transform.position = Vector2.MoveTowards(transform.position,destination.position,Time.deltaTime);
                         if(transform.position.y > destination.position.y){
                             //transform.Translate(Vector3.down*speed* Time.deltaTime);
@@ -312,8 +340,8 @@ public class PlayerManager : MonoBehaviour
                         }
                         sr.flipX = false;
                         SetBooster("UPDOWN");
-                        rb.MovePosition(rb.position + movement * runSpeed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", runSpeed / defaultSpeed / 2);
+                        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+                        animator.SetFloat("Speed", speed / defaultSpeed / 2);
                         HandleFuel(-fuelUsagePerRun);
                         
                     }
@@ -330,13 +358,13 @@ public class PlayerManager : MonoBehaviour
                         }
                         sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
                         SetBooster("LEFTRIGHT"); 
-                        rb.MovePosition(rb.position + movement * runSpeed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", runSpeed / defaultSpeed / 2);
+                        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+                        animator.SetFloat("Speed", speed / defaultSpeed / 2);
                         HandleFuel(-fuelUsagePerRun);
                     }
                 }
                 else if(isMining){
-                    Debug.Log("미네랄 채취 준비");
+                    //Debug.Log("미네랄 채취 준비");
                     animator.SetBool("Stop", true);
                     workLight.SetActive(true);
                     if(!animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Att")){
@@ -344,17 +372,17 @@ public class PlayerManager : MonoBehaviour
                         animator.SetTrigger("Att");
                     }
                     if(!miningFlag){
-                    //Debug.Log("1");
+                    ////Debug.Log("1");
                         miningFlag = true;
                         StartCoroutine(MiningCoroutine());
-                    //Debug.Log("2");
+                    ////Debug.Log("2");
                     } 
                 }
                 else if(isHolding&&!isMining){
                     //StopCoroutine(miningCoroutine);
-                    Debug.Log("센터로 이동");
+                    //Debug.Log("센터로 이동");
                     
-                    if(destination==null) destination = GameObject.FindWithTag("Center").transform;
+                    destination = GameObject.FindWithTag("Center").transform;
                                         
                     if(gotCenter){
                         HandleMineral();
@@ -363,55 +391,93 @@ public class PlayerManager : MonoBehaviour
                         destination = null;
                         mineral.gameObject.SetActive(false);
                         packageType = PackageType.none;
-                        Debug.Log("미네랄 저장");
+                        //Debug.Log("미네랄 저장");
                     }
-                    //else if(Mathf.Abs(transform.position.y - destination.position.y)>=0.1f){                    
-                    // else if(Mathf.Abs(transform.position.y - destination.position.y)>=
-                    // destination.GetComponent<BoxCollider2D>().bounds.max.y - destination.GetComponent<BoxCollider2D>().bounds.min.y
-                    // ){
                     else if(Mathf.Abs(transform.position.y - destination.position.y)>=
                     destination.GetComponent<BoxCollider2D>().size.y * destination.localScale.y /2){                    
-                        Debug.Log("1 :" +destination.GetComponent<BoxCollider2D>().bounds.max.y);
-                        Debug.Log("2 :" +destination.GetComponent<BoxCollider2D>().bounds.min.y);
-                        //gotMine = false;
-                        //Debug.Log(Mathf.Abs(transform.position.y - destination.position.y));
-                            //transform.position = Vector2.MoveTowards(transform.position,destination.position,Time.deltaTime);
                         if(transform.position.y > destination.position.y){
-                            //transform.Translate(Vector3.down*speed* Time.deltaTime);
                             movement = new Vector2(0,-1);
-                            //curFuel -= fuelUsagePerRun;
                         }
                         else{
-                            //transform.Translate(Vector3.up*speed* Time.deltaTime);
                             movement = new Vector2(0,1);
 
                         }
                         sr.flipX = false;
                         SetBooster("UPDOWN");
-                        rb.MovePosition(rb.position + movement * runSpeed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", runSpeed / defaultSpeed / 2);
+                        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+                        animator.SetFloat("Speed", speed / defaultSpeed / 2);
                         HandleFuel(-fuelUsagePerRun);
                         
                     }
                     else if(Mathf.Abs(transform.position.x - destination.position.x)>=0.1f){
-                        //gotMine = false;
-                        Debug.Log("1 :" +destination.GetComponent<BoxCollider2D>().bounds.max.y);
-                        Debug.Log("2 :" +destination.GetComponent<BoxCollider2D>().bounds.min.y);
                         if(transform.position.x > destination.position.x){
                             movement = new Vector2(-1,0);
-                            //transform.Translate(Vector3.left*speed* Time.deltaTime);
                         }
                         else{
-                            //transform.Translate(Vector3.right*speed* Time.deltaTime);
                             movement = new Vector2(1,0);
 
                         }
                         sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
                         SetBooster("LEFTRIGHT"); 
-                        rb.MovePosition(rb.position + movement * runSpeed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", runSpeed / defaultSpeed / 2);
+                        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+                        animator.SetFloat("Speed", speed / defaultSpeed / 2);
                         HandleFuel(-fuelUsagePerRun);
                     }
+                }
+            }
+            if(goToCenter){
+                //StopAuto();
+                UIManager.instance.DisableColliders();
+                //canMove = false;
+                //isAuto = false;
+                
+                if(isAuto || MobileControl.instance.isTouch){
+                    goToCenter = false;  //오토모드중 움직이면 오토 중지.
+                Debug.Log("22");
+                    StopAuto();
+                }
+                destination = GameObject.FindWithTag("Center").transform;
+                                    
+                if(gotCenter){
+                    //HandleMineral();
+                    goToCenter = false;
+                    gotCenter = false;
+                    //isHolding = false;
+                    destination = null;
+                    //mineral.gameObject.SetActive(false);
+                    //packageType = PackageType.none;
+                    ////Debug.Log("미네랄 저장");
+                    EnterCenter();
+                }
+                else if(Mathf.Abs(transform.position.y - destination.position.y)>=
+                destination.GetComponent<BoxCollider2D>().size.y * destination.localScale.y /2){                    
+                    if(transform.position.y > destination.position.y){
+                        movement = new Vector2(0,-1);
+                    }
+                    else{
+                        movement = new Vector2(0,1);
+
+                    }
+                    sr.flipX = false;
+                    SetBooster("UPDOWN");
+                    rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+                    animator.SetFloat("Speed", speed / defaultSpeed / 2);
+                    HandleFuel(-fuelUsagePerRun);
+                    
+                }
+                else if(Mathf.Abs(transform.position.x - destination.position.x)>=0.1f){
+                    if(transform.position.x > destination.position.x){
+                        movement = new Vector2(-1,0);
+                    }
+                    else{
+                        movement = new Vector2(1,0);
+
+                    }
+                    sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
+                    SetBooster("LEFTRIGHT"); 
+                    rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+                    animator.SetFloat("Speed", speed / defaultSpeed / 2);
+                    HandleFuel(-fuelUsagePerRun);
                 }
             }
         }
@@ -419,10 +485,10 @@ public class PlayerManager : MonoBehaviour
 
 #region SetMineral
         if(int.Parse(mineralBar.text)<curMineral){
-            //Debug.Log("미네랄 업");
+            ////Debug.Log("미네랄 업");
             
             mineralBar.text = (int.Parse(mineralBar.text) + 1).ToString();
-            //mineralBar.text = ((int)Mathf.Lerp(int.Parse(mineralBar.text), curMineral, Time.deltaTime *runSpeed )).ToString();
+            //mineralBar.text = ((int)Mathf.Lerp(int.Parse(mineralBar.text), curMineral, Time.deltaTime *speed )).ToString();
         }
         // else{
         //     mineralBar.text = curMineral.ToString();
@@ -481,7 +547,7 @@ public class PlayerManager : MonoBehaviour
         Destroy(gameObject);
     }
 //부스터랑 미네랄 위치 세팅
-    void SetBooster(string dir){
+    public void SetBooster(string dir){
         if(dir=="UPDOWN"){
             if (shadowType == ShadowType.booster){
                 if(animator.GetFloat("Vertical") < 0){//하
@@ -533,11 +599,11 @@ public class PlayerManager : MonoBehaviour
             fuelBar.value = 0;
             canMove = false;
             animator.SetFloat("Speed", 0f);
-            Debug.Log("앵꼬");
+            //Debug.Log("앵꼬");
         }
         else if(curFuel>maxFuel){
             curFuel = maxFuel;
-            Debug.Log("풀차지");
+            //Debug.Log("풀차지");
         }
         fuelBar.value = Mathf.Lerp(fuelBar.value,(float) curFuel / (float) maxFuel, Time.deltaTime*10 );
         
@@ -548,7 +614,7 @@ public class PlayerManager : MonoBehaviour
         int preMineral = curMineral;
         switch(packageType){
             case PackageType.normal :
-                curMineral += 8;
+                curMineral += capacity;
                 break;
             default :
                 break;
@@ -584,7 +650,7 @@ public class PlayerManager : MonoBehaviour
         //mineralBar.text = (int)Mathf.Lerp(mineralBar.text.ToString(), curMineral, Time.deltaTime*10 );
         //mineralBar.text = temp.ToString();
 
-        //Debug.Log(temp0,temp,curMineral);
+        ////Debug.Log(temp0,temp,curMineral);
         // switch(packageType){
         //     case PackageType.normal :
         //         curMineral += 8;
@@ -624,14 +690,14 @@ public class PlayerManager : MonoBehaviour
                 if(!isHolding){
                     gotMine = true;
                 }
-                Debug.Log("미네랄 발견");
+                //Debug.Log("미네랄 발견");
             }        
             
             else if(collision.tag == "Center"){
-                if(isHolding){
+                //if(isHolding){
                     gotCenter = true;
-                }
-                Debug.Log("센터 발견");
+                //}
+                //Debug.Log("센터 발견");
             }
         //}
     
@@ -641,6 +707,7 @@ public class PlayerManager : MonoBehaviour
         //     placeFlag = true;
             if(collision.tag == "Mineral Field"){
                     gotMine = false;
+        isMining = false;
             }        
             
             else if(collision.tag == "Center"){
@@ -656,9 +723,9 @@ public class PlayerManager : MonoBehaviour
     // }
 
     IEnumerator MiningCoroutine(){
-                    Debug.Log("미네랄 채취 시작");
-        yield return new WaitForSeconds(miningSpeed);
-                    Debug.Log("미네랄 채취 완료");
+                    //Debug.Log("미네랄 채취 시작");
+        yield return new WaitForSeconds(weldingSec);
+                    //Debug.Log("미네랄 채취 완료");
                     workLight.SetActive(false);
         animator.SetBool("Stop", false);
         isHolding = true;
@@ -669,7 +736,8 @@ public class PlayerManager : MonoBehaviour
     }
 
     public void StopAuto(){
-
+ Debug.Log("STOP AUTO");
+        UIManager.instance.EnableColliders();
         isMining = false;
         StopAllCoroutines();
         animator.SetBool("Stop", false);
@@ -678,6 +746,23 @@ public class PlayerManager : MonoBehaviour
         workLight.SetActive(false);
         isMining = false;
     }
+    // public void GoToCenter(){
+    //     goToCenter = !goToCenter;
+    // }
+    public void EnterCenter(){    
+        StopAuto();
+        UIManager.instance.centerUI.SetActive(true);
+        canMove = false;
+    }
+    public void ExitCenter(){
+        UIManager.instance.centerUI.SetActive(false);
+        canMove = true;
+    }
 
-    
+    public void RefreshEquip(){
+        weldingSec = defaultWeldingSec + weldingLevel * UpgradeManager.instance.upgradeList[0].upgradeDelta;
+        speed = defaultSpeed + engineLevel * UpgradeManager.instance.upgradeList[1].upgradeDelta;
+        maxFuel = defaultFuel + fuelLevel  * UpgradeManager.instance.upgradeList[2].upgradeDelta;
+        capacity = bodyLevel * (int)UpgradeManager.instance.upgradeList[3].upgradeDelta;
+    }
 }
