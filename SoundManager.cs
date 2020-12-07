@@ -6,7 +6,40 @@ using UnityEngine;
 public class Sound{
     public string soundName;
     public AudioClip clip;
+    private AudioSource source;     //사운드 플레이어(볼륨조절등)
     public float volume = 1f;
+    public bool loop;
+    public void SetSource(AudioSource _source)
+    {
+        source = _source;
+        source.clip = clip;
+        source.loop = loop;
+        source.volume = volume;
+    }
+    public void Play()
+    {
+        source.Play();
+    }
+
+    public void Stop()
+    {
+        source.Stop();
+    }
+
+    public void SetLoop()
+    {
+        source.loop = true;
+    }
+
+    public void SetLoopCancel()
+    {
+        source.loop = false;
+    }
+
+    public void SetVolume()
+    {
+        source.volume = volume;
+    }
 }
 public class SoundManager : MonoBehaviour
 
@@ -26,26 +59,51 @@ public class SoundManager : MonoBehaviour
     {
         instance =this;
         bgmPlayer.clip = bgmSounds[0].clip;
-        bgmPlayer.Play();
+        bgmPlayer.Play();        
+        
+        for(int i = 0; i<sfxSounds.Length; i++)
+        {
+            GameObject soundObject = new GameObject("사운드파일:" + i + "=" + sfxSounds[i].soundName);
+            sfxSounds[i].SetSource(soundObject.AddComponent<AudioSource>());
+            soundObject.transform.SetParent(this.transform);
+        }
+    }
+    public void BGMPlay(int num){
+        
+        bgmPlayer.clip = bgmSounds[num].clip;
+        bgmPlayer.Play();   
     }
 
-    public void PlaySE(string _soundName){
-        for(int i=0; i<sfxSounds.Length; i++){
-            if(_soundName == sfxSounds[i].soundName){
-                for(int j=0;j<sfxPlayer.Length; j++){
-                    if(!sfxPlayer[j].isPlaying){
-                        sfxPlayer[j].clip=sfxSounds[i].clip;
-                        sfxPlayer[j].Play();
-                        return;
-                    }
-                }
+    public void Play(string _soundName){
+        // for(int i=0; i<sfxSounds.Length; i++){
+        //     if(_soundName == sfxSounds[i].soundName){
+        //         for(int j=0;j<sfxPlayer.Length; j++){
+        //             if(!sfxPlayer[j].isPlaying){
+        //                 sfxPlayer[j].clip=sfxSounds[i].clip;
+        //                 sfxPlayer[j].Play();
+        //                 return;
+        //             }
+        //         }
+        //         return;
+        //     }
+        // }
+        for (int i = 0; i < sfxSounds.Length; i++)
+        {
+            if(_soundName == sfxSounds[i].soundName)
+            {
+                sfxSounds[i].Play();
                 return;
             }
         }
     }
 
     public void ClickSound(){
-        PlaySE("click");
+        Play("btn0");
     }
+
+    public void ReadySound(){
+        Play("ready");
+    } 
+
 
 }

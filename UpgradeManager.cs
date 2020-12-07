@@ -50,6 +50,7 @@ public class UpgradeManager : MonoBehaviour
 
     [Header("상점")]
     public GameObject upgradePanel;
+    public GameObject upgradeBtn;
     public Text mainText;   //몸통강화 한번에 더많은 광물 운반합니다
     public Text descriptText;   //적재량
     public Text phaseText;  //단계
@@ -106,7 +107,8 @@ public class UpgradeManager : MonoBehaviour
                 
             mainText.text = nowUpgradePanel.mainText;
             descriptText.text = nowUpgradePanel.desText;
-            phaseText.text = tempLevel.ToString() + " > " + (tempLevel+1).ToString() ;
+            //phaseText.text = tempLevel.ToString() + " > " + (tempLevel+1).ToString() ;
+            phaseText.text = tempLevel.ToString() + " / " + nowUpgradePanel.maxLevel.ToString() ;
 
             upgradeText.text = (tempDefault+(tempLevel-1)*nowUpgradePanel.upgradeDelta).ToString() + " >> " + (tempDefault+tempLevel*nowUpgradePanel.upgradeDelta).ToString() ;
             //if(nowPage==0) upgradeText.text = (tempDefault+(tempLevel-1)*nowUpgradePanel.upgradeDelta).ToString() + " >> " + (tempDefault+tempLevel*nowUpgradePanel.upgradeDelta).ToString() ;
@@ -115,22 +117,26 @@ public class UpgradeManager : MonoBehaviour
             // else if(nowPage==3) upgradeText.text = (tempDefault+(tempLevel-1)*nowUpgradePanel.upgradeDelta).ToString() + " >> " + (tempLevel*nowUpgradePanel.upgradeDelta).ToString() ;
             
             priceText.text = (tempLevel*nowUpgradePanel.priceDelta).ToString() ;
+            upgradeBtn.SetActive(true);
 
         }
         else{
             
             mainText.text = nowUpgradePanel.mainText;
             descriptText.text = nowUpgradePanel.desText;
-            phaseText.text = tempLevel.ToString();
+            phaseText.text = tempLevel.ToString() + " / " + nowUpgradePanel.maxLevel.ToString() ;
 
             upgradeText.text = (tempDefault+(tempLevel-1)*nowUpgradePanel.upgradeDelta).ToString();
             
-            priceText.text = "";
+            priceText.text = "MAX";
+            upgradeBtn.SetActive(false);
         }
 
         upgradePanel.SetActive(true);
+
     }
     public void UpgradeBtn(){
+        SoundManager.instance.Play("up");
         switch(nowPage){
             case 0 :
                 PlayerManager.instance.weldingLevel++;

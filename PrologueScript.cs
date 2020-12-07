@@ -6,13 +6,15 @@ public class PrologueScript : MonoBehaviour
 {
     public GameObject[] texts;
     public GameObject prologuePanel;
+    public GameObject objectPanel;
     // Start is called before the first frame update
     void Start()
     {
         StartCoroutine(Event());
     }
 
-    IEnumerator Event(){
+    IEnumerator Event()
+    {
         yield return new WaitForSeconds(4f);
         texts[0].SetActive(false);
         texts[1].SetActive(true);
@@ -29,6 +31,16 @@ public class PrologueScript : MonoBehaviour
         texts[4].SetActive(false);
         texts[5].SetActive(true);
         yield return new WaitForSeconds(5f);
-        prologuePanel.SetActive(false);
+        EndPrologue();
     }
+
+    public void EndPrologue(){
+        
+        prologuePanel.SetActive(false);
+        objectPanel.SetActive(true);
+        SoundManager.instance.Play("rescue");
+    }
+    public void ReadySound(){
+        SoundManager.instance.Play("explo");
+    } 
 }

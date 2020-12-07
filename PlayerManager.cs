@@ -97,6 +97,10 @@ public class PlayerManager : MonoBehaviour
     bool onY;
     [Header("센터 이동")]//auto 버튼 눌렀을 때
         [HideInInspector]public bool goToCenter;
+
+
+    public GameObject floatingText;
+    public GameObject floatingCanvas;
     void Start()
     {
         if(type==UnitType.unit){
@@ -145,6 +149,8 @@ public class PlayerManager : MonoBehaviour
         mineralBar = UIManager.instance.minText;
 
         miningCoroutine = MiningCoroutine();
+
+        LoadData();
     }
 
     // Update is called once per frame
@@ -486,9 +492,21 @@ public class PlayerManager : MonoBehaviour
 #region SetMineral
         if(int.Parse(mineralBar.text)<curMineral){
             ////Debug.Log("미네랄 업");
+            int temp = curMineral-int.Parse(mineralBar.text);
+            //Debug.Log(temp);
+            if(temp>=10){
+                
+                mineralBar.text = (int.Parse(mineralBar.text) + temp/10).ToString();
+            }
+            else{
+                
+                mineralBar.text = (int.Parse(mineralBar.text) + 1).ToString();
+            }
             
-            mineralBar.text = (int.Parse(mineralBar.text) + 1).ToString();
             //mineralBar.text = ((int)Mathf.Lerp(int.Parse(mineralBar.text), curMineral, Time.deltaTime *speed )).ToString();
+        }
+        else if(int.Parse(mineralBar.text)>=curMineral){
+            mineralBar.text=curMineral.ToString();
         }
         // else{
         //     mineralBar.text = curMineral.ToString();
@@ -619,6 +637,8 @@ public class PlayerManager : MonoBehaviour
             default :
                 break;
         }
+
+        PrintFloating("+ "+capacity.ToString());
 
         // float duration = 0.5f; // 카운팅에 걸리는 시간 설정. 
 
@@ -764,5 +784,43 @@ public class PlayerManager : MonoBehaviour
         speed = defaultSpeed + engineLevel * UpgradeManager.instance.upgradeList[1].upgradeDelta;
         maxFuel = defaultFuel + fuelLevel  * UpgradeManager.instance.upgradeList[2].upgradeDelta;
         capacity = bodyLevel * (int)UpgradeManager.instance.upgradeList[3].upgradeDelta;
+    }    
+    public void RepSound(){
+        SoundManager.instance.Play("rep"+Random.Range(0,5));
+    }
+    
+    void OnApplicationQuit(){
+        
+        SaveData();
+        Debug.Log("저장시작");
+    }
+
+    void SaveData(){
+
+        PlayerPrefs.SetInt("curMineral", curMineral);
+        
+        Debug.Log("저장성공");
+    }
+    void LoadData(){
+
+        curMineral= PlayerPrefs.GetInt("curMineral", curMineral);
+        
+        Debug.Log("로드성공");
+    }    
+    public void PrintFloating(string text, Sprite sprite = null)
+    {
+
+        if (text != "")
+        {
+            var clone = Instantiate(floatingText, floatingCanvas.transform.position, Quaternion.identity);
+            clone.GetComponent<Text>().text = text;
+            clone.transform.SetParent(floatingCanvas.transform);
+        }
+        // else
+        // {
+        //     var clone = Instantiate(floatingImage, floatingCanvas.transform.position, Quaternion.identity);
+        //     clone.GetComponent<FloatingText>().image.sprite = sprite;
+        //     clone.transform.SetParent(floatingCanvas.transform);
+        // }
     }
 }
