@@ -32,6 +32,8 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] public UnitType type;
     [SerializeField] public ShadowType shadowType;
     [SerializeField] public PackageType packageType = PackageType.none;
+    
+    public int helperDone;
     public int curMineral;
     Slider fuelBar;
     Text mineralBar;
@@ -42,12 +44,15 @@ public class PlayerManager : MonoBehaviour
     public float curFuel;
     private float calculatedFuel;
 
+    public float curSpeed;
+
     public float fuelUsagePerWalk = 1f;
     public float fuelUsagePerRun = 2f;
 
     //public float miningSpeed = 5f;
     
     [Header("장비 초기값")]
+    public float crawlSpeed;
     public float defaultWeldingSec;
     public float defaultSpeed;
     public float defaultFuel;
@@ -82,27 +87,39 @@ public class PlayerManager : MonoBehaviour
         [HideInInspector]public bool isMining;//채취 중일 때
     private bool miningFlag;
     [Header("이동 관련")]//auto 버튼 눌렀을 때
-        [HideInInspector]public bool isAuto;
+        public bool isAuto;
        [HideInInspector] public bool autoGathering;  //아무것도 들고 있지 않은 상태 > 미네랄로 감.
         [HideInInspector]public bool autoReturnCargo;//미네랄 들고 있는 상태 > 센터로 감.
         [HideInInspector]public bool isMoving;
-        [HideInInspector]public bool gotMine;//미네랄 발견
-        [HideInInspector]public bool gotCenter;//센터 발견
+        public bool gotMine;//미네랄 발견
+        public bool gotDestination;//센터 발견
         [HideInInspector]public bool placeFlag;
         [HideInInspector]public SpriteRenderer mineral;
         [HideInInspector]public GameObject workLight;
-        [HideInInspector]public Transform destination;
+    public Transform destination;
     IEnumerator miningCoroutine;
     bool onX;
     bool onY;
-    [Header("센터 이동")]//auto 버튼 눌렀을 때
-        [HideInInspector]public bool goToCenter;
+    [Header("지점 이동")]//auto 버튼 눌렀을 때
+        public bool goTo;
 
 
     public GameObject floatingText;
     public GameObject floatingCanvas;
+
+
+    
+    public Texture2D characterTexture2D;
+    public Sprite[] characterSprites;
+    private string[] names;
+    private string spritePath;
     void Start()
     {
+        // spritePath = ("SCV");
+        // characterSprites = Resources.LoadAll<Sprite>(spritePath);
+        // names = new string[characterSprites.Length];
+        
+        // UpdateCharacterTexture();
         if(type==UnitType.unit){
             isAlive = true;
             canMove = true;
@@ -136,8 +153,9 @@ public class PlayerManager : MonoBehaviour
         //defaultSpeed = speed;
 
         //초기설정
+        RefreshEquip();
         weldingSec = defaultWeldingSec;
-        speed = defaultSpeed;
+        curSpeed = defaultSpeed;
         maxFuel = defaultFuel;
         capacity = defaultCapacity;
 
@@ -151,6 +169,14 @@ public class PlayerManager : MonoBehaviour
         miningCoroutine = MiningCoroutine();
 
         LoadData();
+
+        UpgradeManager.instance.ApplyEquipsLevel();
+
+        // if(helperDone==0){
+        //     helperDone = 1;
+        //     SaveData("helperDone");
+        //     HelperManager.instance.HelperOn();
+        // }
     }
 
     // Update is called once per frame
@@ -301,11 +327,11 @@ public class PlayerManager : MonoBehaviour
                 //goToCenter = false;
 
                 //if(goToCenter || MobileControl.instance.isTouch|| Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0){
-                if(goToCenter || MobileControl.instance.isTouch){
+                if(goTo || MobileControl.instance.isTouch){
                     isAuto = false;  //오토모드중 움직이면 오토 중지.
                 Debug.Log("11");
                     StopAuto();
-                       //Debug.Log("22");
+                       Debug.Log("22");
                 }
                 
                     
@@ -346,9 +372,9 @@ public class PlayerManager : MonoBehaviour
                         }
                         sr.flipX = false;
                         SetBooster("UPDOWN");
-                        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", speed / defaultSpeed / 2);
-                        HandleFuel(-fuelUsagePerRun);
+                        rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                        animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                        HandleFuel(-fuelUsagePerWalk);
                         
                     }
                     else if(Mathf.Abs(transform.position.x - destination.position.x)>=0.1f){
@@ -364,9 +390,9 @@ public class PlayerManager : MonoBehaviour
                         }
                         sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
                         SetBooster("LEFTRIGHT"); 
-                        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", speed / defaultSpeed / 2);
-                        HandleFuel(-fuelUsagePerRun);
+                        rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                        animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                        HandleFuel(-fuelUsagePerWalk);
                     }
                 }
                 else if(isMining){
@@ -390,9 +416,12 @@ public class PlayerManager : MonoBehaviour
                     
                     destination = GameObject.FindWithTag("Center").transform;
                                         
-                    if(gotCenter){
+                    if(gotDestination){
+                        // switch(packageType){
+                        //     case packageType.none :
+                        // }
                         HandleMineral();
-                        gotCenter = false;
+                        gotDestination = false;
                         isHolding = false;
                         destination = null;
                         mineral.gameObject.SetActive(false);
@@ -410,9 +439,9 @@ public class PlayerManager : MonoBehaviour
                         }
                         sr.flipX = false;
                         SetBooster("UPDOWN");
-                        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", speed / defaultSpeed / 2);
-                        HandleFuel(-fuelUsagePerRun);
+                        rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                        animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                        HandleFuel(-fuelUsagePerWalk);
                         
                     }
                     else if(Mathf.Abs(transform.position.x - destination.position.x)>=0.1f){
@@ -425,37 +454,39 @@ public class PlayerManager : MonoBehaviour
                         }
                         sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
                         SetBooster("LEFTRIGHT"); 
-                        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", speed / defaultSpeed / 2);
-                        HandleFuel(-fuelUsagePerRun);
+                        rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                        animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                        HandleFuel(-fuelUsagePerWalk);
                     }
                 }
             }
-            if(goToCenter){
+            if(goTo){
                 //StopAuto();
                 UIManager.instance.DisableColliders();
                 //canMove = false;
                 //isAuto = false;
                 
                 if(isAuto || MobileControl.instance.isTouch){
-                    goToCenter = false;  //오토모드중 움직이면 오토 중지.
+                    goTo = false;  //오토모드중 움직이면 오토 중지.
                 Debug.Log("22");
                     StopAuto();
                 }
-                destination = GameObject.FindWithTag("Center").transform;
+                //destination = GameObject.FindWithTag("Center").transform;
                                     
-                if(gotCenter){
+                if(gotDestination){
                     //HandleMineral();
-                    goToCenter = false;
-                    gotCenter = false;
+                    goTo = false;
+                    gotDestination = false;
                     //isHolding = false;
+                    Enter();
                     destination = null;
                     //mineral.gameObject.SetActive(false);
                     //packageType = PackageType.none;
                     ////Debug.Log("미네랄 저장");
-                    EnterCenter();
+                    
                 }
-                else if(Mathf.Abs(transform.position.y - destination.position.y)>=
+                //길찾기
+                else if(destination!=null && Mathf.Abs(transform.position.y - destination.position.y)>=
                 destination.GetComponent<BoxCollider2D>().size.y * destination.localScale.y /2){                    
                     if(transform.position.y > destination.position.y){
                         movement = new Vector2(0,-1);
@@ -466,12 +497,12 @@ public class PlayerManager : MonoBehaviour
                     }
                     sr.flipX = false;
                     SetBooster("UPDOWN");
-                    rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
-                    animator.SetFloat("Speed", speed / defaultSpeed / 2);
-                    HandleFuel(-fuelUsagePerRun);
+                    rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                    animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                    HandleFuel(-fuelUsagePerWalk);
                     
                 }
-                else if(Mathf.Abs(transform.position.x - destination.position.x)>=0.1f){
+                else if(destination!=null && Mathf.Abs(transform.position.x - destination.position.x)>=0.1f){
                     if(transform.position.x > destination.position.x){
                         movement = new Vector2(-1,0);
                     }
@@ -481,35 +512,34 @@ public class PlayerManager : MonoBehaviour
                     }
                     sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
                     SetBooster("LEFTRIGHT"); 
-                    rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
-                    animator.SetFloat("Speed", speed / defaultSpeed / 2);
-                    HandleFuel(-fuelUsagePerRun);
+                    rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                    animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                    HandleFuel(-fuelUsagePerWalk);
                 }
+                
             }
         }
 #endregion
 
 #region SetMineral
-        if(int.Parse(mineralBar.text)<curMineral){
+        if(int.Parse(mineralBar.text)!=curMineral){
             ////Debug.Log("미네랄 업");
             int temp = curMineral-int.Parse(mineralBar.text);
             //Debug.Log(temp);
-            if(temp>=10){
+            if(temp>=10 || temp <=-10){
                 
                 mineralBar.text = (int.Parse(mineralBar.text) + temp/10).ToString();
             }
             else{
                 
-                mineralBar.text = (int.Parse(mineralBar.text) + 1).ToString();
+                mineralBar.text = temp>0 ? (int.Parse(mineralBar.text) + 1).ToString() : (int.Parse(mineralBar.text) - 1).ToString();
+
             }
             
             //mineralBar.text = ((int)Mathf.Lerp(int.Parse(mineralBar.text), curMineral, Time.deltaTime *speed )).ToString();
         }
-        else if(int.Parse(mineralBar.text)>=curMineral){
-            mineralBar.text=curMineral.ToString();
-        }
-        // else{
-        //     mineralBar.text = curMineral.ToString();
+        // else if(int.Parse(mineralBar.text)>=curMineral){
+        //     mineralBar.text=curMineral.ToString();
         // }
 #endregion
 
@@ -528,6 +558,8 @@ public class PlayerManager : MonoBehaviour
         else if(Input.GetKeyUp(KeyCode.Space)){
             animator.SetBool("Stop", false);
         }
+
+        curSpeed = curFuel>0? speed : crawlSpeed;
     }
 
 
@@ -608,14 +640,15 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    public void HandleFuel(float amount){
+    public void HandleFuel(float amount, bool lerp=true){
         if(curFuel>=0 && curFuel<=maxFuel){
             curFuel += amount;
+
         }
         else if(curFuel<0){
             curFuel = 0f;
             fuelBar.value = 0;
-            canMove = false;
+            //canMove = false;
             animator.SetFloat("Speed", 0f);
             //Debug.Log("앵꼬");
         }
@@ -623,22 +656,36 @@ public class PlayerManager : MonoBehaviour
             curFuel = maxFuel;
             //Debug.Log("풀차지");
         }
-        fuelBar.value = Mathf.Lerp(fuelBar.value,(float) curFuel / (float) maxFuel, Time.deltaTime*10 );
+        if(lerp){
+                
+            fuelBar.value = Mathf.Lerp(fuelBar.value,(float) curFuel / (float) maxFuel, Time.deltaTime*10 );
+        }
+        else{
+            fuelBar.value = (float) curFuel / (float) maxFuel;
+        }
         
     }
 
-    void HandleMineral(){
+    public void HandleMineral(int amount = 0,bool floating = true){
         //int temp0 = curMineral;
-        int preMineral = curMineral;
-        switch(packageType){
-            case PackageType.normal :
-                curMineral += capacity;
-                break;
-            default :
-                break;
+        //int preMineral = curMineral;
+        if(amount==0){
+                
+            switch(packageType){
+                case PackageType.normal :
+                    curMineral += capacity;
+                    break;
+                default :
+                    break;
+            }
+        }
+        else{
+            curMineral += amount;
         }
 
-        PrintFloating("+ "+capacity.ToString());
+        if(floating) PrintFloating("+ "+capacity.ToString());
+
+        SaveData("curMineral");
 
         // float duration = 0.5f; // 카운팅에 걸리는 시간 설정. 
 
@@ -713,11 +760,14 @@ public class PlayerManager : MonoBehaviour
                 //Debug.Log("미네랄 발견");
             }        
             
-            else if(collision.tag == "Center"){
-                //if(isHolding){
-                    gotCenter = true;
-                //}
-                //Debug.Log("센터 발견");
+            else if(destination != null){
+                    
+                if(collision.name == destination.name){
+                    //if(isHolding){
+                        gotDestination = true;
+                    //}
+                    //Debug.Log("센터 발견");
+                }
             }
         //}
     
@@ -731,7 +781,7 @@ public class PlayerManager : MonoBehaviour
             }        
             
             else if(collision.tag == "Center"){
-                    gotCenter = false;
+                    gotDestination = false;
             }
         //}
     
@@ -752,6 +802,9 @@ public class PlayerManager : MonoBehaviour
         isMining = false;                        
         miningFlag = false;
         mineral.gameObject.SetActive(true);
+
+
+        //미네랄 종류 선택()
         packageType = PackageType.normal;
     }
 
@@ -769,9 +822,17 @@ public class PlayerManager : MonoBehaviour
     // public void GoToCenter(){
     //     goToCenter = !goToCenter;
     // }
-    public void EnterCenter(){    
+    public void Enter(){    
+        switch(destination.name){
+            case "Center" :
+                UIManager.instance.centerUI.SetActive(true);
+                break;
+            case "Bay" :
+                UIManager.instance.bayUI.SetActive(true);
+                break;
+
+        }
         StopAuto();
-        UIManager.instance.centerUI.SetActive(true);
         canMove = false;
     }
     public void ExitCenter(){
@@ -780,33 +841,37 @@ public class PlayerManager : MonoBehaviour
     }
 
     public void RefreshEquip(){
-        weldingSec = defaultWeldingSec + weldingLevel * UpgradeManager.instance.upgradeList[0].upgradeDelta;
-        speed = defaultSpeed + engineLevel * UpgradeManager.instance.upgradeList[1].upgradeDelta;
-        maxFuel = defaultFuel + fuelLevel  * UpgradeManager.instance.upgradeList[2].upgradeDelta;
-        capacity = bodyLevel * (int)UpgradeManager.instance.upgradeList[3].upgradeDelta;
+        weldingSec = defaultWeldingSec + (weldingLevel-1) * UpgradeManager.instance.upgradeList[0].upgradeDelta;
+        speed = defaultSpeed + (engineLevel-1) * UpgradeManager.instance.upgradeList[1].upgradeDelta;
+        maxFuel = defaultFuel + (fuelLevel-1)  * UpgradeManager.instance.upgradeList[2].upgradeDelta;
+        capacity = defaultCapacity + (bodyLevel-1) * (int)UpgradeManager.instance.upgradeList[3].upgradeDelta;
     }    
     public void RepSound(){
         SoundManager.instance.Play("rep"+Random.Range(0,5));
+    }    
+    public void YesSound(){
+        SoundManager.instance.Play("SCYes"+Random.Range(0,5));
     }
     
-    void OnApplicationQuit(){
+    // void OnApplicationQuit(){
         
-        SaveData();
-        Debug.Log("저장시작");
+    //     SaveData();
+    //     //Debug.Log("저장시작");
+    // }
+
+    void SaveData(string key){
+        switch(key){
+            case "curMineral" : 
+                PlayerPrefs.SetInt(key, curMineral);
+                break;
+            case "helperDone" : 
+                PlayerPrefs.SetInt(key, helperDone);
+                break;
+
+        }
+        
+        //Debug.Log("저장성공");
     }
-
-    void SaveData(){
-
-        PlayerPrefs.SetInt("curMineral", curMineral);
-        
-        Debug.Log("저장성공");
-    }
-    void LoadData(){
-
-        curMineral= PlayerPrefs.GetInt("curMineral", curMineral);
-        
-        Debug.Log("로드성공");
-    }    
     public void PrintFloating(string text, Sprite sprite = null)
     {
 
@@ -822,5 +887,88 @@ public class PlayerManager : MonoBehaviour
         //     clone.GetComponent<FloatingText>().image.sprite = sprite;
         //     clone.transform.SetParent(floatingCanvas.transform);
         // }
+    }
+
+
+//         public Texture2D CopyTexture2D(Texture2D copiedTexture)
+//     {
+//                //Create a new Texture2D, which will be the copy.
+//         Texture2D texture = new Texture2D(copiedTexture.width, copiedTexture.height);
+//                //Choose your filtermode and wrapmode here.
+//         texture.filterMode = FilterMode.Point;
+//         texture.wrapMode = TextureWrapMode.Clamp;
+ 
+//         int y = 0;
+//         while (y < texture.height)
+//         {
+//             int x = 0;
+//             while (x < texture.width)
+//             {
+//                                //INSERT YOUR LOGIC HERE
+//                 if(copiedTexture.GetPixel(x,y) ==  new Color32(222, 222, 222, 255))
+//                 {
+//                                        //This line of code and if statement, turn Green pixels into Red pixels.
+//                     texture.SetPixel(x, y,Color.red);
+//                     Debug.Log("1");
+//                 }
+//                 else
+//                 {
+//                                //This line of code is REQUIRED. Do NOT delete it. This is what copies the image as it was, without any change.
+//                 texture.SetPixel(x, y, copiedTexture.GetPixel(x,y));
+//                 //Debug.Log("2");
+//                 }
+//                 ++x;
+//             }
+//             ++y;
+//         }
+//                 //Name the texture, if you want.
+//         //texture.name = (Species+Gender+"_SpriteSheet");
+ 
+//                //This finalizes it. If you want to edit it still, do it before you finish with .Apply(). Do NOT expect to edit the image after you have applied. It did NOT work for me to edit it after this function.
+//         texture.Apply();
+ 
+// //Return the variable, so you have it to assign to a permanent variable and so you can use it.
+//         return texture;
+//     }
+ 
+// public void UpdateCharacterTexture()
+//     {
+//         Sprite[] loadSprite = Resources.LoadAll<Sprite> (spritePath);
+//         characterTexture2D = CopyTexture2D(loadSprite[0].texture);
+ 
+//         int i = 0;
+//         while(i != characterSprites.Length)
+//         {
+//             //SpriteRenderer sr = GetComponent<SpriteRenderer>();
+//             //string tempName = sr.sprite.name;
+//             //sr.sprite = Sprite.Create (characterTexture2D, sr.sprite.rect, new Vector2(0,1));
+//             //sr.sprite.name = tempName;
+ 
+//             //sr.material.mainTexture = characterTexture2D;
+//             //sr.material.shader = Shader.Find ("Sprites/Transparent Unlit");
+//             string tempName = characterSprites[i].name;
+//             characterSprites[i] = Sprite.Create (characterTexture2D, characterSprites[i].rect, new Vector2(0,1));
+//             characterSprites[i].name = tempName;
+//             names[i] = tempName;
+//             ++i;
+//         }
+ 
+//         SpriteRenderer sr = GetComponent<SpriteRenderer>();
+//         sr.material.mainTexture = characterTexture2D;
+//         sr.material.shader = Shader.Find ("Transparent Unlit");
+ 
+//     }
+
+
+    void LoadData(){
+
+        //helperDone= PlayerPrefs.GetInt("helperDone", helperDone);
+        curMineral= PlayerPrefs.GetInt("curMineral", curMineral);
+        
+        //Debug.Log("로드성공");
+    }    
+
+    public void GameStart(){
+        SoundManager.instance.Play("ready");
     }
 }

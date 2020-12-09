@@ -35,12 +35,15 @@ public class PrologueScript : MonoBehaviour
     }
 
     public void EndPrologue(){
-        
+        SoundManager.instance.BGMPlay(1);
         prologuePanel.SetActive(false);
         objectPanel.SetActive(true);
         SoundManager.instance.Play("rescue");
     }
-    public void ReadySound(){
+    public void ExploSound(){
         SoundManager.instance.Play("explo");
+    } 
+    public void YesSound(){
+        SoundManager.instance.Play("RaYes0");
     } 
 }

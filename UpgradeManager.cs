@@ -60,6 +60,9 @@ public class UpgradeManager : MonoBehaviour
 
     public int nowPage;
 
+    int tempLevel = 0;
+    float tempDefault = 0;
+
    // [SerializeField]
     public List<Upgrade> upgradeList = new List<Upgrade>();
     public Upgrade nowUpgradePanel;
@@ -78,10 +81,8 @@ public class UpgradeManager : MonoBehaviour
         
     }
 
-    public void ShowUpgradePanel(int num){
+    public void ShowUpgradePanel(int num, bool load = false){//첫 로딩시 UI/장비창 표시
         nowPage = num;
-        int tempLevel = 0;
-        float tempDefault = 0;
         switch(num){
             case 0:
                 tempLevel = PlayerManager.instance.weldingLevel;
@@ -132,36 +133,49 @@ public class UpgradeManager : MonoBehaviour
             upgradeBtn.SetActive(false);
         }
 
-        upgradePanel.SetActive(true);
+        UIManager.instance.upgradeTextArr[num].text = "<color=red>"+tempLevel.ToString()+"</color> / "+nowUpgradePanel.maxLevel.ToString() ;
+
+        if(!load) upgradePanel.SetActive(true);
 
     }
     public void UpgradeBtn(){
-        SoundManager.instance.Play("up");
-        switch(nowPage){
-            case 0 :
-                PlayerManager.instance.weldingLevel++;
-                break;
+        if(PlayerManager.instance.curMineral >= tempLevel*nowUpgradePanel.priceDelta){
+            PlayerManager.instance.HandleMineral(-tempLevel*nowUpgradePanel.priceDelta);
 
-            case 1 :
-                PlayerManager.instance.engineLevel++;
-                break;
+            SoundManager.instance.Play("up");
+            switch(nowPage){
+                case 0 :
+                    PlayerManager.instance.weldingLevel++;
+                    break;
 
-            case 2 :
-                PlayerManager.instance.fuelLevel++;
-                break;
+                case 1 :
+                    PlayerManager.instance.engineLevel++;
+                    break;
 
-            case 3 :
-                PlayerManager.instance.bodyLevel++;
-                break;
+                case 2 :
+                    PlayerManager.instance.fuelLevel++;
+                    break;
 
-            default :
-                break;
+                case 3 :
+                    PlayerManager.instance.bodyLevel++;
+                    break;
 
-
-
+                default :
+                    break;
+            }
+            PlayerManager.instance.RefreshEquip();
+            ShowUpgradePanel(nowPage);  //최신화
         }
-        PlayerManager.instance.RefreshEquip();
-        ShowUpgradePanel(nowPage);  //최신화
+        else{
+            SoundManager.instance.Play("notenoughmin");
+        }
+        
 
+    }
+
+    public void ApplyEquipsLevel(){
+        for(int i=0; i<upgradeList.Count; i++){
+            ShowUpgradePanel(i,true);
+        }
     }
 }

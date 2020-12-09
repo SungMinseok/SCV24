@@ -67,8 +67,16 @@ public class MobileControl : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
                             thePlayer.movement = new Vector2(thePlayer.animator.GetFloat("Horizontal"),thePlayer.animator.GetFloat("Vertical"));
                         }
                         //
-                        thePlayer.rb.MovePosition(thePlayer.rb.position + thePlayer.movement * thePlayer.speed * Time.fixedDeltaTime);
+                        //if(thePlayer.curFuel>0){
+
+                            thePlayer.rb.MovePosition(thePlayer.rb.position + thePlayer.movement * thePlayer.curSpeed * Time.fixedDeltaTime);
+                        //}
+                        //else{
+
+                            //thePlayer.rb.MovePosition(thePlayer.rb.position + thePlayer.movement * thePlayer.defaultCrawlSpeed * Time.fixedDeltaTime);
+                        //}
                         thePlayer.animator.SetFloat("Speed", 1f);
+                        thePlayer.HandleFuel(-thePlayer.fuelUsagePerWalk);
                     //}
         //             else if (thePlayer.isRunning)
         //             {

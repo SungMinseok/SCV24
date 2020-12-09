@@ -100,6 +100,9 @@ public class SoundManager : MonoBehaviour
     public void ClickSound(){
         Play("btn0");
     }
+    public void ClickSoundInGame(){
+        Play("btn1");
+    }
 
     public void ReadySound(){
         Play("ready");
