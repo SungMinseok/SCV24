@@ -33,42 +33,45 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] public ShadowType shadowType;
     [SerializeField] public PackageType packageType = PackageType.none;
     
-    public int helperDone;
-    public int curMineral;
     Slider fuelBar;
     Text mineralBar;
+        int calculated = 0;
 
     //public float runSpeed = 4f;
     //private float defaultSpeed;
 
-    public float curFuel;
-    private float calculatedFuel;
 
-    public float curSpeed;
-
-    public float fuelUsagePerWalk = 1f;
-    public float fuelUsagePerRun = 2f;
+    //public float fuelUsagePerRun = 2f;
 
     //public float miningSpeed = 5f;
+    [Header("기타 값 ( Save & Load )")]
+    public int helperDone;
+    public int curMineral;
+    public float curFuel;
+    public float curGas;
+    [Header("기타 값")]
+    public float curSpeed;
     
-    [Header("장비 초기값")]
+    [Header("장비 초기값 ( Fixed )")]
+    public float fuelUsagePerWalk = 1f;
     public float crawlSpeed;
     public float defaultWeldingSec;
     public float defaultSpeed;
     public float defaultFuel;
     public int defaultCapacity;
 
-    [Header("장비 단계")]
+    [Header("장비 단계 ( Save & Load )")]
     public int weldingLevel;
-    public float weldingSec = 2f;
     public int engineLevel;
-    public float speed = 2f;
     public int fuelLevel;
-    public float maxFuel;
     public int bodyLevel;
+        public int weightLevel;
+
+    [Header("장비 내용")]
+    public float weldingSec = 2f;
+    public float speed = 2f;
+    public float maxFuel;
     public int capacity = 8;//적재량
-
-
     [HideInInspector]    public Rigidbody2D rb;
     [HideInInspector]    public SpriteRenderer sr;
     
@@ -88,20 +91,21 @@ public class PlayerManager : MonoBehaviour
     private bool miningFlag;
     [Header("이동 관련")]//auto 버튼 눌렀을 때
         public bool isAuto;
-       [HideInInspector] public bool autoGathering;  //아무것도 들고 있지 않은 상태 > 미네랄로 감.
-        [HideInInspector]public bool autoReturnCargo;//미네랄 들고 있는 상태 > 센터로 감.
-        [HideInInspector]public bool isMoving;
         public bool gotMine;//미네랄 발견
         public bool gotDestination;//센터 발견
         [HideInInspector]public bool placeFlag;
         [HideInInspector]public SpriteRenderer mineral;
         [HideInInspector]public GameObject workLight;
+        Transform centerPos;
+        Transform mineralPos;
     public Transform destination;
     IEnumerator miningCoroutine;
     bool onX;
     bool onY;
     [Header("지점 이동")]//auto 버튼 눌렀을 때
         public bool goTo;
+    [Header("UI")]//auto 버튼 눌렀을 때
+        public string enterableBuilding;
 
 
     public GameObject floatingText;
@@ -109,10 +113,10 @@ public class PlayerManager : MonoBehaviour
 
 
     
-    public Texture2D characterTexture2D;
-    public Sprite[] characterSprites;
-    private string[] names;
-    private string spritePath;
+    // public Texture2D characterTexture2D;
+    // public Sprite[] characterSprites;
+    // private string[] names;
+    // private string spritePath;
     void Start()
     {
         // spritePath = ("SCV");
@@ -153,7 +157,6 @@ public class PlayerManager : MonoBehaviour
         //defaultSpeed = speed;
 
         //초기설정
-        RefreshEquip();
         weldingSec = defaultWeldingSec;
         curSpeed = defaultSpeed;
         maxFuel = defaultFuel;
@@ -168,15 +171,20 @@ public class PlayerManager : MonoBehaviour
 
         miningCoroutine = MiningCoroutine();
 
-        LoadData();
+        //LoadData();
+        DBManager.instance.CallLoad(0);
 
         UpgradeManager.instance.ApplyEquipsLevel();
+        RefreshEquip();
 
         // if(helperDone==0){
         //     helperDone = 1;
         //     SaveData("helperDone");
         //     HelperManager.instance.HelperOn();
         // }
+        //위치 지정
+        centerPos = GameObject.FindWithTag("Center").transform;
+        mineralPos = GameObject.FindWithTag("Mineral Field").transform;
     }
 
     // Update is called once per frame
@@ -327,7 +335,8 @@ public class PlayerManager : MonoBehaviour
                 //goToCenter = false;
 
                 //if(goToCenter || MobileControl.instance.isTouch|| Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0){
-                if(goTo || MobileControl.instance.isTouch){
+                //if(goTo || MobileControl.instance.isTouch){
+                if(goTo){
                     isAuto = false;  //오토모드중 움직이면 오토 중지.
                 Debug.Log("11");
                     StopAuto();
@@ -340,7 +349,7 @@ public class PlayerManager : MonoBehaviour
                     //미네랄로 이동
                 if(!isHolding&&!isMining){
                     //Debug.Log("미네랄로 이동");
-                    destination = GameObject.FindWithTag("Mineral Field").transform;
+                    destination = mineralPos;
                     
                     if(gotMine){
                         gotMine = false;
@@ -414,7 +423,7 @@ public class PlayerManager : MonoBehaviour
                     //StopCoroutine(miningCoroutine);
                     //Debug.Log("센터로 이동");
                     
-                    destination = GameObject.FindWithTag("Center").transform;
+                    destination = centerPos;
                                         
                     if(gotDestination){
                         // switch(packageType){
@@ -461,24 +470,20 @@ public class PlayerManager : MonoBehaviour
                 }
             }
             if(goTo){
-                //StopAuto();
                 UIManager.instance.DisableColliders();
-                //canMove = false;
-                //isAuto = false;
                 
-                if(isAuto || MobileControl.instance.isTouch){
+                //if(isAuto || MobileControl.instance.isTouch){
+                if(isAuto){
                     goTo = false;  //오토모드중 움직이면 오토 중지.
                 Debug.Log("22");
                     StopAuto();
                 }
-                //destination = GameObject.FindWithTag("Center").transform;
-                                    
                 if(gotDestination){
                     //HandleMineral();
                     goTo = false;
                     gotDestination = false;
                     //isHolding = false;
-                    Enter();
+                    UIManager.instance.EnterBuilding();
                     destination = null;
                     //mineral.gameObject.SetActive(false);
                     //packageType = PackageType.none;
@@ -522,19 +527,24 @@ public class PlayerManager : MonoBehaviour
 #endregion
 
 #region SetMineral
-        if(int.Parse(mineralBar.text)!=curMineral){
+        //if(int.Parse(mineralBar.text)!=curMineral){
+        if(calculated!=curMineral){
             ////Debug.Log("미네랄 업");
-            int temp = curMineral-int.Parse(mineralBar.text);
+            //int temp = curMineral-int.Parse(mineralBar.text);
+            int temp = curMineral-calculated;
             //Debug.Log(temp);
             if(temp>=10 || temp <=-10){
                 
-                mineralBar.text = (int.Parse(mineralBar.text) + temp/10).ToString();
+                //calculated= (int.Parse(mineralBar.text) + temp/10);
+                calculated= calculated + temp/10;
             }
             else{
                 
-                mineralBar.text = temp>0 ? (int.Parse(mineralBar.text) + 1).ToString() : (int.Parse(mineralBar.text) - 1).ToString();
+                //calculated= temp>0 ? (int.Parse(mineralBar.text) + 1) : (int.Parse(mineralBar.text) - 1);
+                calculated= temp>0 ? calculated + 1 : calculated - 1;
 
             }
+            mineralBar.text = string.Format("{0:#,###0}", calculated);
             
             //mineralBar.text = ((int)Mathf.Lerp(int.Parse(mineralBar.text), curMineral, Time.deltaTime *speed )).ToString();
         }
@@ -685,7 +695,7 @@ public class PlayerManager : MonoBehaviour
 
         if(floating) PrintFloating("+ "+capacity.ToString());
 
-        SaveData("curMineral");
+        //SaveData("curMineral");
 
         // float duration = 0.5f; // 카운팅에 걸리는 시간 설정. 
 
@@ -765,10 +775,16 @@ public class PlayerManager : MonoBehaviour
                 if(collision.name == destination.name){
                     //if(isHolding){
                         gotDestination = true;
+                        enterableBuilding = collision.name;
                     //}
                     //Debug.Log("센터 발견");
                 }
             }
+            // else if(destination == null){
+            //     //Debug.Log("11");
+            //     UIManager.instance.ActivateSelectPanel(collision);
+
+            // }
         //}
     
     }
@@ -782,6 +798,12 @@ public class PlayerManager : MonoBehaviour
             
             else if(collision.tag == "Center"){
                     gotDestination = false;
+            }            
+            
+            if(UIManager.instance.selectPanel.activeSelf){
+                UIManager.instance.selectPanel.GetComponent<Animator>().SetTrigger("out");
+                //SetActive(true);
+                enterableBuilding = "";
             }
         //}
     
@@ -814,6 +836,7 @@ public class PlayerManager : MonoBehaviour
         isMining = false;
         StopAllCoroutines();
         animator.SetBool("Stop", false);
+        animator.SetFloat("Speed", 0f);
         miningFlag = false;
         destination=null;
         workLight.SetActive(false);
@@ -853,11 +876,7 @@ public class PlayerManager : MonoBehaviour
         SoundManager.instance.Play("SCYes"+Random.Range(0,5));
     }
     
-    // void OnApplicationQuit(){
-        
-    //     SaveData();
-    //     //Debug.Log("저장시작");
-    // }
+
 
     void SaveData(string key){
         switch(key){
@@ -960,15 +979,16 @@ public class PlayerManager : MonoBehaviour
 //     }
 
 
-    void LoadData(){
+    // void LoadData(){
 
-        //helperDone= PlayerPrefs.GetInt("helperDone", helperDone);
-        curMineral= PlayerPrefs.GetInt("curMineral", curMineral);
+    //     //helperDone= PlayerPrefs.GetInt("helperDone", helperDone);
+    //     curMineral= PlayerPrefs.GetInt("curMineral", curMineral);
         
-        //Debug.Log("로드성공");
-    }    
+    //     //Debug.Log("로드성공");
+    // }    
 
     public void GameStart(){
         SoundManager.instance.Play("ready");
+        UIManager.instance.StartTimer();
     }
 }

@@ -24,7 +24,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] public Text minText;
     [SerializeField] public Text timerText;
     bool timerBtn;
-    int second, minute, hour;
+    int second, minute, hour, day;
 
     [Header("센터")]
     public GameObject centerUI;
@@ -35,10 +35,14 @@ public class UIManager : MonoBehaviour
     public List<BoxCollider2D> boxes;
 
     public Texture2D characterTexture2D;
+
+    [Header("빌딩 입장")]
+    public GameObject[] buildings;
+    public GameObject selectPanel;
     //public SpriteRenderer center;
     
     void Start(){
-        StartTimer();
+        //StartTimer();
     
     //UpdateCharacterTexture();
     }
@@ -71,6 +75,10 @@ public class UIManager : MonoBehaviour
         if(!PlayerManager.instance.isAuto) {
             
             PlayerManager.instance.YesSound();
+        }
+        else{
+            
+                PlayerManager.instance.StopAuto();
         }
         PlayerManager.instance.isAuto = !PlayerManager.instance.isAuto;
     }    
@@ -141,17 +149,30 @@ public class UIManager : MonoBehaviour
  
     private void Update()
     {
-        UpdateTimer(totalTime );
+        if(timerBtn){
+                
+            UpdateTimer(totalTime );
+        }
     }
 
 
-    public void UpdateTimer(float totalSeconds)
+    // public void UpdateTimer(float totalSeconds)
+    // {     
+    //     totalTime += Time.deltaTime*20;
+    //     day = (int)(totalSeconds / 86400f) + 1;
+    //     hour = (int)(totalSeconds / 3600f)%24;
+    //     minute = (int)(totalSeconds / 60f)%60;
+    //     //second = (int)totalSeconds % 60;
+    //     timerText.text = string.Format("<color=red>Day</color> {0} <color=red>/</color> {1:00}:{2:00}", day, hour, minute); // <color=red>Day</color> 1 <color=red>/</color> 24:00
+    // }
+    public void UpdateTimer(float totalMinutes)
     {     
-        totalTime += Time.deltaTime;
-        hour = (int)(totalSeconds / 3600f);
-        minute = (int)(totalSeconds / 60f)%60;
-        second = (int)totalSeconds % 60;
-        timerText.text = string.Format("{0:00} : {1:00} : {2:00}", hour, minute, second);
+        totalTime += Time.deltaTime*2;
+        day = (int)(totalMinutes / 1440f) + 1;
+        hour = (int)(totalMinutes / 60f)%24;
+        minute = (int)(totalMinutes)%60;
+        //second = (int)totalSeconds % 60;
+        timerText.text = string.Format("<color=red>Day</color> {0} <color=red>/</color> {1:00}:{2:00}", day, hour, minute); // <color=red>Day</color> 1 <color=red>/</color> 24:00
     }
 
 /////////////////////////////////////////////센터
@@ -189,4 +210,47 @@ public class UIManager : MonoBehaviour
             
         // }
     }
+    public void EnterBuilding(){
+        PlayerManager.instance.StopAuto();
+        //GameObject temp = GameObject.Find(PlayerManager.instance.enterableBuilding + "Panel");
+        for(int i=0; i<buildings.Length; i++){
+            if(buildings[i].name == PlayerManager.instance.enterableBuilding + "Panel"){
+                buildings[i].SetActive(true);
+                selectPanel.SetActive(false);
+                return;        
+            }
+            
+        }
+        Debug.Log("없음");
+        
+    }
+    public void ExitBuilding(){
+        for(int i=0; i<buildings.Length; i++){
+            if(buildings[i].activeSelf){
+                buildings[i].SetActive(false);
+                //ActivateSelectPanel();
+            }
+            // if(buildings[i].name == PlayerManager.instance.enterableBuilding + "Panel"){
+            //     buildings[i].SetActive(true);
+            //     selectPanel.SetActive(false);
+                
+            // }
+        }
+    }
+    // public void ActivateSelectPanel(Collider2D collision =null){
+    //     if(collision!=null){
+
+    //         if((collision.tag == "Building" || collision.tag == "Center") && !selectPanel.activeSelf){
+    //             selectPanel.SetActive(true);
+    //             PlayerManager.instance.enterableBuilding = collision.name;
+    //         }
+    //     }
+    //     else{
+    //         if(!selectPanel.activeSelf){
+
+    //                         selectPanel.SetActive(true);
+    //         }
+    //     }
+
+    // }
 }

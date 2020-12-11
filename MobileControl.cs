@@ -4,14 +4,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 public enum ControllerType
 {
-    Joystick,
+    Control,
     JoyPad,
-    Shift,
-    Space,
-    Btn1,
-    Btn2,
-    Btn3,
-    TouchPad,
 
 }
 
@@ -21,6 +15,8 @@ public enum ControllerType
 public class MobileControl : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler, IPointerClickHandler
 {
     public static MobileControl instance;
+    
+    [Header("JoyPad")]
     [SerializeField] private ControllerType type;
     [SerializeField] private Canvas canvas;
     [SerializeField] private RectTransform bg;
@@ -30,71 +26,64 @@ public class MobileControl : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     public bool isTouch;
     //public bool isDragging;
     private float r;
+    private float h;
     public PlayerManager thePlayer;
-    //public GameObject mobileController;
+    public MobileControl mobileControl;
     public Camera theCamera;
     Vector2 originPos;
-    //public GameObject eventSystem;
+    public bool isFixed;
+    public bool isActivated;
+
+    [Header("Control")]
+    public GameObject fixedJoy;
+    public GameObject unfixedJoy;
     void Start()
     {
         instance = this;
-        //thePlayer = PlayerManager.instance;
+        //theCamera = GameObject.Find("Camera").GetComponent<Camera>();
+
+
+        if(type == ControllerType.JoyPad){      
+
         theCamera = GameObject.Find("Camera").GetComponent<Camera>();
-        //mobileController.SetActive(true);
-        originPos = bg.transform.localPosition;
-        if (type != ControllerType.TouchPad){
+            originPos = bg.transform.localPosition;
             r = bg.rect.width * 0.5f;
+            //h = GetComponent<RectTransform>().rect.height *0.5f;
+            mobileControl = GameObject.Find("MobileControl").GetComponent<MobileControl>();
         }
-        
-        // if (type == ControllerType.JoyPad){
-        //     eventSystem.SetActive(false);
+        // if (type != ControllerType.TouchPad)
+        // {
         // }
+
+        //rect= GetComponent<RectTransform>();
+        //unfixedJoyRect = GetComponent<RectTransform>();
+
     }
 
     void Update()
     {
-        if (/*type == ControllerType.Joystick ||*/ type == ControllerType.JoyPad)
+        if (type == ControllerType.JoyPad)
         {
             if (thePlayer.canMove)
             {
                 if (isTouch)
                 {
-                    //if (!thePlayer.isRunning)
-                    //{
-        ////Debug.Log("걷기");
-                        //씬 전환후 이동 유지하기
-                        if(thePlayer.movement == Vector2.zero){
-                            thePlayer.movement = new Vector2(thePlayer.animator.GetFloat("Horizontal"),thePlayer.animator.GetFloat("Vertical"));
-                        }
-                        //
-                        //if(thePlayer.curFuel>0){
+                    if (thePlayer.movement == Vector2.zero)
+                    {
+                        thePlayer.movement = new Vector2(thePlayer.animator.GetFloat("Horizontal"), thePlayer.animator.GetFloat("Vertical"));
+                    }
 
-                            thePlayer.rb.MovePosition(thePlayer.rb.position + thePlayer.movement * thePlayer.curSpeed * Time.fixedDeltaTime);
-                        //}
-                        //else{
-
-                            //thePlayer.rb.MovePosition(thePlayer.rb.position + thePlayer.movement * thePlayer.defaultCrawlSpeed * Time.fixedDeltaTime);
-                        //}
-                        thePlayer.animator.SetFloat("Speed", 1f);
-                        thePlayer.HandleFuel(-thePlayer.fuelUsagePerWalk);
-                    //}
-        //             else if (thePlayer.isRunning)
-        //             {
-        // ////Debug.Log("달리기");
-        //                 //씬 전환후 이동 유지하기
-        //                 if(thePlayer.movement == Vector2.zero){
-        //                     thePlayer.movement = new Vector2(thePlayer.animator.GetFloat("Horizontal"),thePlayer.animator.GetFloat("Vertical"));
-        //                 }
-        //                 //
-        //                 thePlayer.rb.MovePosition(thePlayer.rb.position + thePlayer.movement * thePlayer.runSpeed * Time.fixedDeltaTime);
-        //                 thePlayer.animator.SetFloat("Speed", 2f);
-        //             }
+                    thePlayer.rb.MovePosition(thePlayer.rb.position + thePlayer.movement * thePlayer.curSpeed * Time.fixedDeltaTime);
+                    thePlayer.animator.SetFloat("Speed", 1f);
+                    thePlayer.HandleFuel(-thePlayer.fuelUsagePerWalk);
                 }
                 else
                 {
-                    if(js.localPosition == Vector3.zero){
-        ////Debug.Log("멈춤");
-
+                    
+                    js.localPosition = Vector3.zero;
+                    bg.gameObject.transform.localPosition = originPos;
+                    if (js.localPosition == Vector3.zero)
+                    {
                         thePlayer.animator.SetFloat("Speed", 0f);
                     }
 
@@ -103,37 +92,22 @@ public class MobileControl : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
             else if (!thePlayer.canMove)
             {
 
-                //isTouch = false;
-                //js.localPosition = Vector3.zero;
-
-                //mobileController.SetActive(false);
-                //thePlayer.animator.SetFloat("Speed", 0f);
             }
         }
 
     }
     public void OnDrag(PointerEventData eventData)
     {
-        ////Debug.Log("ondrag");
-        if (/*type == ControllerType.Joystick ||*/ type == ControllerType.JoyPad )
+            //Debug.Log("OnDrag");
+        if (type == ControllerType.JoyPad)
         {
             if (thePlayer.canMove)
             {
-                //if(type == ControllerType.JoyPad ){
-                    
-                    Vector3 temp = theCamera.ScreenToWorldPoint(eventData.position);
-                    js.gameObject.transform.position = new Vector3(temp.x, temp.y,0);
-                    js.anchoredPosition = Vector2.ClampMagnitude(js.anchoredPosition, r);
-                //}
-                // else{
-                    
-                //     js.anchoredPosition += eventData.delta / canvas.scaleFactor;
-                //     js.anchoredPosition = Vector2.ClampMagnitude(js.anchoredPosition, r);
-                // }
-
+                Vector3 temp = theCamera.ScreenToWorldPoint(eventData.position);
+                js.gameObject.transform.position = new Vector3(temp.x, temp.y, 0);
+                js.anchoredPosition = Vector2.ClampMagnitude(js.anchoredPosition, r);
+                //GetComponent<RectTransform>().anchoredPosition = Vector2.ClampMagnitude(GetComponent<RectTransform>().anchoredPosition, h);
                 Vector3 v = js.anchoredPosition.normalized;
-                // //Debug.Log("local"+v);
-                // //Debug.Log("anchoredPosition"+js.anchoredPosition);
 
                 if (v.y < 0.7 && v.y > 0)
                 {
@@ -193,34 +167,27 @@ public class MobileControl : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     }
     public void OnPointerDown(PointerEventData eventData)
     {
-        ////Debug.Log("OnPointerDown");
-        //Vibration.Vibrate(200);
-        if (/*type == ControllerType.Joystick ||*/ type == ControllerType.JoyPad)
+            //Debug.Log("OnPointerDown");
+        if (type == ControllerType.JoyPad)
         {
-
             Vector3 temp = theCamera.ScreenToWorldPoint(eventData.position);
-            js.gameObject.transform.position = new Vector3(temp.x, temp.y,0);
-            bg.gameObject.transform.position = new Vector3(temp.x, temp.y,0);
-            //js.anchoredPosition = Vector2.ClampMagnitude(js.anchoredPosition, r);
+            js.gameObject.transform.position = new Vector3(temp.x, temp.y, 0);
+            if(!mobileControl.isFixed){
+                
+                bg.gameObject.transform.position = new Vector3(temp.x, temp.y, 0);
+            }
             isTouch = true;
             OnDrag(eventData);
         }
 
-        // else if (type == ControllerType.Space)
-        // {
-        //     //thePlayer.getSpace = true;
-        //     Invoke("DelayClick",0.2f);
-        // }
-
     }
     public void OnPointerUp(PointerEventData eventData)
     {
-        ////Debug.Log("OnPointerUp");
-        if (/*type == ControllerType.Joystick||*/ type == ControllerType.JoyPad)
+            //Debug.Log("OnPointerUp");
+        if (type == ControllerType.JoyPad)
         {
             isTouch = false;
             js.localPosition = Vector3.zero;
-            //js.gameObject.transform.position = originPos;
             bg.gameObject.transform.localPosition = originPos;
             thePlayer.animator.SetFloat("Speed", 0f);
         }
@@ -231,7 +198,18 @@ public class MobileControl : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
     {
 
     }
-
+    public void ToggleFix(){
+        isFixed = !isFixed;
+        if(isFixed){
+            fixedJoy.SetActive(true);
+            unfixedJoy.SetActive(false);
+        }
+        else{
+            
+            fixedJoy.SetActive(false);
+            unfixedJoy.SetActive(true);
+        }
+    }
 
 }
 #endif

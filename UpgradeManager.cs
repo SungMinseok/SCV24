@@ -81,7 +81,7 @@ public class UpgradeManager : MonoBehaviour
         
     }
 
-    public void ShowUpgradePanel(int num, bool load = false){//첫 로딩시 UI/장비창 표시
+    public void ShowUpgradePanel(int num){
         nowPage = num;
         switch(num){
             case 0:
@@ -135,7 +135,7 @@ public class UpgradeManager : MonoBehaviour
 
         UIManager.instance.upgradeTextArr[num].text = "<color=red>"+tempLevel.ToString()+"</color> / "+nowUpgradePanel.maxLevel.ToString() ;
 
-        if(!load) upgradePanel.SetActive(true);
+         upgradePanel.SetActive(true);
 
     }
     public void UpgradeBtn(){
@@ -175,7 +175,8 @@ public class UpgradeManager : MonoBehaviour
 
     public void ApplyEquipsLevel(){
         for(int i=0; i<upgradeList.Count; i++){
-            ShowUpgradePanel(i,true);
+            ShowUpgradePanel(i);
+            upgradePanel.SetActive(false);
         }
     }
 }
