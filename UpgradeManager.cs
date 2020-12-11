@@ -129,7 +129,7 @@ public class UpgradeManager : MonoBehaviour
 
             upgradeText.text = (tempDefault+(tempLevel-1)*nowUpgradePanel.upgradeDelta).ToString();
             
-            priceText.text = "MAX";
+            priceText.text = "N/A";
             upgradeBtn.SetActive(false);
         }
 

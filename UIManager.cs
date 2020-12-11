@@ -41,9 +41,10 @@ public class UIManager : MonoBehaviour
     public GameObject selectPanel;
     //public SpriteRenderer center;
     
+    [Header("UI Bundle ( Fix Camera )")]
+    public GameObject[] uis;
     void Start(){
         //StartTimer();
-    
     //UpdateCharacterTexture();
     }
 
@@ -253,4 +254,12 @@ public class UIManager : MonoBehaviour
     //     }
 
     // }
+    public bool OnUI(){  //UI켜져있으면 true
+        for(int i=0;i<uis.Length;i++){
+            if(uis[i].activeSelf){
+                return true;
+            }
+        }
+        return false;
+    }
 }
