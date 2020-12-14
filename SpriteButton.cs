@@ -5,7 +5,9 @@ using UnityEngine;
 [SerializeField]
 public enum BuildingType{
     Enterable,
+    Resource,
 }
+[RequireComponent (typeof (BoxCollider2D))]
 public class SpriteButton : MonoBehaviour
 {
     [SerializeField] BuildingType buildingType;
@@ -30,6 +32,10 @@ public class SpriteButton : MonoBehaviour
             if(buildingType == BuildingType.Enterable){
 
                 UIManager.instance.TogglegoTo(objectName);
+            }
+            else if(buildingType == BuildingType.Resource){
+
+                UIManager.instance.ToggleAuto();
             }
         }
 

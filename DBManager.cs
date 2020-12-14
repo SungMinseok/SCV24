@@ -37,6 +37,9 @@ public class DBManager : MonoBehaviour
         public int bodyLevel;
         public int weightLevel;
 
+        //건설
+        public float[] buildTimeCounter;
+
     }
     UIManager theUI;
     PlayerManager thePlayer;
@@ -67,6 +70,10 @@ public class DBManager : MonoBehaviour
         data.engineLevel = thePlayer.engineLevel;
         data.fuelLevel = thePlayer.fuelLevel;
         data.bodyLevel = thePlayer.bodyLevel;
+
+    //건설
+        data.buildTimeCounter = BuildingManager.instance.buildTimeCounter;
+        
 
         BinaryFormatter bf = new BinaryFormatter();
         //FileStream file = File.Create(Application.persistentDataPath + "/SaveFile" + num +".dat");
@@ -107,6 +114,10 @@ public class DBManager : MonoBehaviour
                 thePlayer.fuelLevel =data.fuelLevel;
                 thePlayer.bodyLevel =data.bodyLevel;
                 thePlayer.weightLevel =data.weightLevel;
+
+                //건설 // 배열은 널체크
+                
+                if(data.buildTimeCounter.Length!=0) BuildingManager.instance.buildTimeCounter=data.buildTimeCounter ;
             }
 
 
@@ -115,6 +126,30 @@ public class DBManager : MonoBehaviour
     }
 
     public void ResetDB(){
+        PlayerManager.instance.curMineral = 1000000;
+        PlayerManager.instance.curGas = 0;
+        PlayerManager.instance.curFuel = PlayerManager.instance.defaultFuel;
+        PlayerManager.instance.curSpeed = PlayerManager.instance. defaultSpeed;
+        PlayerManager.instance.weldingLevel = 1;
+        PlayerManager.instance.engineLevel = 1;
+        PlayerManager.instance.fuelLevel = 1;
+        PlayerManager.instance.bodyLevel = 1;
+
+        //UpgradeManager.instance.ApplyEquipsLevel();//업글패널 갱신
+        UpgradeManager.instance.ResetUpgradePanelUI();//업글패널 초기화
+        UpgradeManager.instance.ApplyEquipsLevel();
+        PlayerManager.instance.RefreshEquip();//현재 장비 적용
+        
+        //건물 관련
+        for(int i=0;i<BuildingManager.instance.buildings.Length;i++){
+            
+            BuildingManager.instance.buildTimeCounter[i] = 0;
+            BuildingManager.instance.buildingsInMap[i].transform.GetChild(0).gameObject.SetActive(false);
+            BuildingManager.instance.buildingsInMap[i].transform.GetChild(1).gameObject.SetActive(false);
+            BuildingManager.instance.isConstructing[i]=false;
+        }
+
+        BuildingManager.instance.BuildingStateCheck();
         
     }
 

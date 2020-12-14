@@ -13,7 +13,14 @@ public enum ShadowType{
 public enum PackageType{
     none,
     normal,
+}    
+public enum OrderType{
+        Move,
+        Enter,
+        Stop,
+        Build,
 }
+
 public class PlayerManager : MonoBehaviour
 {
     public static PlayerManager instance;    
@@ -32,6 +39,9 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] public UnitType type;
     [SerializeField] public ShadowType shadowType;
     [SerializeField] public PackageType packageType = PackageType.none;
+    public OrderType orderType;
+    public GameObject CMCamera;
+    public GameObject autoPanel;
     
     Slider fuelBar;
     Text mineralBar;
@@ -104,6 +114,7 @@ public class PlayerManager : MonoBehaviour
     bool onY;
     [Header("지점 이동")]//auto 버튼 눌렀을 때
         public bool goTo;
+        public bool buildStart;
     [Header("UI")]//auto 버튼 눌렀을 때
         public string enterableBuilding;
 
@@ -174,9 +185,18 @@ public class PlayerManager : MonoBehaviour
         //LoadData();
         DBManager.instance.CallLoad(0);
 
-        UpgradeManager.instance.ApplyEquipsLevel();
+        //UpgradeManager.instance.ApplyEquipsLevel();
         RefreshEquip();
 
+        //이거 두개 같이 실행시켜야 UI 제대로 적용됨
+        UpgradeManager.instance.ResetUpgradePanelUI();
+        UpgradeManager.instance.ApplyEquipsLevel();
+        //BuildingManager.instance.ResetBuilding();
+        //////////////////////////////
+         BuildingManager.instance.BuildingStateCheck();
+
+
+        
         // if(helperDone==0){
         //     helperDone = 1;
         //     SaveData("helperDone");
@@ -334,6 +354,7 @@ public class PlayerManager : MonoBehaviour
                 UIManager.instance.DisableColliders();
                 //goToCenter = false;
 
+        autoPanel.SetActive(false);
                 //if(goToCenter || MobileControl.instance.isTouch|| Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0){
                 //if(goTo || MobileControl.instance.isTouch){
                 if(goTo){
@@ -472,6 +493,7 @@ public class PlayerManager : MonoBehaviour
             if(goTo){
                 UIManager.instance.DisableColliders();
                 
+        if(orderType!=OrderType.Build )autoPanel.SetActive(false);
                 //if(isAuto || MobileControl.instance.isTouch){
                 if(isAuto){
                     goTo = false;  //오토모드중 움직이면 오토 중지.
@@ -483,8 +505,16 @@ public class PlayerManager : MonoBehaviour
                     goTo = false;
                     gotDestination = false;
                     //isHolding = false;
-                    UIManager.instance.EnterBuilding();
+                    if(orderType == OrderType.Enter){
+                        UIManager.instance.EnterBuilding();
+                    }
+                    else if(orderType == OrderType.Build){
+                        buildStart = true;
+                        StopAuto();
+                    }
+                    orderType = OrderType.Stop;
                     destination = null;
+                    //StopAuto();
                     //mineral.gameObject.SetActive(false);
                     //packageType = PackageType.none;
                     ////Debug.Log("미네랄 저장");
@@ -673,6 +703,7 @@ public class PlayerManager : MonoBehaviour
         else{
             fuelBar.value = (float) curFuel / (float) maxFuel;
         }
+        UIManager.instance.fuelPercentText.text = (Mathf.RoundToInt(fuelBar.value*100)).ToString() + "%";
         
     }
 
@@ -832,6 +863,9 @@ public class PlayerManager : MonoBehaviour
 
     public void StopAuto(){
  Debug.Log("STOP AUTO");
+        if(goTo) goTo =false;
+        CMCamera.SetActive(false);
+        autoPanel.SetActive(false);
         UIManager.instance.EnableColliders();
         isMining = false;
         StopAllCoroutines();
@@ -862,7 +896,7 @@ public class PlayerManager : MonoBehaviour
         UIManager.instance.centerUI.SetActive(false);
         canMove = true;
     }
-
+    //장비 레벨 현재 장비에 적용
     public void RefreshEquip(){
         weldingSec = defaultWeldingSec + (weldingLevel-1) * UpgradeManager.instance.upgradeList[0].upgradeDelta;
         speed = defaultSpeed + (engineLevel-1) * UpgradeManager.instance.upgradeList[1].upgradeDelta;
@@ -990,5 +1024,24 @@ public class PlayerManager : MonoBehaviour
     public void GameStart(){
         SoundManager.instance.Play("ready");
         UIManager.instance.StartTimer();
+    }    
+    
+    public void Order(string where, OrderType type){
+        StopAuto();
+        autoPanel.SetActive(true);
+        CMCamera.SetActive(true);
+        orderType = type;
+        if(type == OrderType.Build){
+                
+            SoundManager.instance.Play("btn1");
+            isAuto = false;
+            goTo = true;    
+            YesSound();
+            destination = GameObject.Find(where).transform;
+        }
+        else if(type == OrderType.Stop){
+
+        }
     }
+
 }

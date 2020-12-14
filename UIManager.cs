@@ -20,9 +20,14 @@ public class UIManager : MonoBehaviour
     }
     public string btnClickSound ;
     public float totalTime = 86341f; //2 minutes
+    
+    [Header("상단 UI")]
     [SerializeField] public Slider fuelBar;
+    public Text fuelPercentText;
     [SerializeField] public Text minText;
     [SerializeField] public Text timerText;
+    [Header("하단 UI")]
+    public GameObject buildLock;
     bool timerBtn;
     int second, minute, hour, day;
 
@@ -31,6 +36,7 @@ public class UIManager : MonoBehaviour
     [Header("Bay")]
     public GameObject bayUI;
     public Text[] upgradeTextArr;
+    public Text totalLevel;
     [Header("센터")]
     public List<BoxCollider2D> boxes;
 
@@ -96,7 +102,7 @@ public class UIManager : MonoBehaviour
         PlayerManager.instance.goTo = !PlayerManager.instance.goTo;    
             }
             else{
-                
+                PlayerManager.instance.orderType = OrderType.Enter;
                 PlayerManager.instance.YesSound();
                 PlayerManager.instance.destination = GameObject.Find(where).transform;
             }
@@ -105,6 +111,7 @@ public class UIManager : MonoBehaviour
         else{
                 PlayerManager.instance.StopAuto();
             
+                PlayerManager.instance.orderType = OrderType.Enter;
             PlayerManager.instance.YesSound();
 
             PlayerManager.instance.destination = GameObject.Find(where).transform;
@@ -151,8 +158,14 @@ public class UIManager : MonoBehaviour
     private void Update()
     {
         if(timerBtn){
-                
             UpdateTimer(totalTime );
+        }
+
+        if(PlayerManager.instance.goTo || BuildingManager.instance.ConstructingCheck()){
+            buildLock.SetActive(true);
+        }
+        else{
+            buildLock.SetActive(false);
         }
     }
 
@@ -217,7 +230,7 @@ public class UIManager : MonoBehaviour
         for(int i=0; i<buildings.Length; i++){
             if(buildings[i].name == PlayerManager.instance.enterableBuilding + "Panel"){
                 buildings[i].SetActive(true);
-                selectPanel.SetActive(false);
+                //selectPanel.SetActive(false);
                 return;        
             }
             
@@ -262,4 +275,6 @@ public class UIManager : MonoBehaviour
         }
         return false;
     }
+
+
 }
