@@ -115,6 +115,7 @@ public class PlayerManager : MonoBehaviour
     [Header("지점 이동")]//auto 버튼 눌렀을 때
         public bool goTo;
         public bool buildStart;
+        public Transform selectedMineral;
     [Header("UI")]//auto 버튼 눌렀을 때
         public string enterableBuilding;
 
@@ -172,6 +173,7 @@ public class PlayerManager : MonoBehaviour
         curSpeed = defaultSpeed;
         maxFuel = defaultFuel;
         capacity = defaultCapacity;
+        //selectedMineral = mineralPos;
 
         //체력
         fuelBar = UIManager.instance.fuelBar;
@@ -195,6 +197,9 @@ public class PlayerManager : MonoBehaviour
         //////////////////////////////
          BuildingManager.instance.BuildingStateCheck();
 
+         //채취로봇
+        BotManager.instance.LoadBot();
+
 
         
         // if(helperDone==0){
@@ -204,7 +209,7 @@ public class PlayerManager : MonoBehaviour
         // }
         //위치 지정
         centerPos = GameObject.FindWithTag("Center").transform;
-        mineralPos = GameObject.FindWithTag("Mineral Field").transform;
+        //mineralPos = GameObject.FindWithTag("Mineral Field").transform;
     }
 
     // Update is called once per frame
@@ -370,7 +375,7 @@ public class PlayerManager : MonoBehaviour
                     //미네랄로 이동
                 if(!isHolding&&!isMining){
                     //Debug.Log("미네랄로 이동");
-                    destination = mineralPos;
+                    destination = selectedMineral;
                     
                     if(gotMine){
                         gotMine = false;
@@ -902,6 +907,8 @@ public class PlayerManager : MonoBehaviour
         speed = defaultSpeed + (engineLevel-1) * UpgradeManager.instance.upgradeList[1].upgradeDelta;
         maxFuel = defaultFuel + (fuelLevel-1)  * UpgradeManager.instance.upgradeList[2].upgradeDelta;
         capacity = defaultCapacity + (bodyLevel-1) * (int)UpgradeManager.instance.upgradeList[3].upgradeDelta;
+
+        BotManager.instance.RefreshBotEquip();
     }    
     public void RepSound(){
         SoundManager.instance.Play("rep"+Random.Range(0,5));

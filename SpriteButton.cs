@@ -35,6 +35,7 @@ public class SpriteButton : MonoBehaviour
             }
             else if(buildingType == BuildingType.Resource){
 
+                PlayerManager.instance.selectedMineral = this.transform;
                 UIManager.instance.ToggleAuto();
             }
         }

@@ -2,9 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+public enum BotState{
+    Stop,
+    Mine,
+}
 public class BotScript : MonoBehaviour
 {
+    public BotState botState;
+    public float efficiency;
     [HideInInspector]public Rigidbody2D rb;
     [HideInInspector]public SpriteRenderer sr;
     private Vector2 defaultSide;
@@ -21,8 +26,13 @@ public class BotScript : MonoBehaviour
     public bool gotMine;//미네랄 발견
     public bool gotDestination;//센터 발견
     public Transform destination;
-    public float curSpeed = 2f;
-    public float weldingSec = 2f;
+
+    [Header("능력치")]
+    public float speed;
+    public float weldingSec;
+    public float fuelUsagePerWalk;
+    public int capacity;
+    ////////////////////
     public GameObject workLight;
     public GameObject mineral;
     GameObject booster;
@@ -54,8 +64,11 @@ public class BotScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(botState == BotState.Mine){
             if(!isHolding&&!isMining){
-                destination = GameObject.FindWithTag("Mineral Field").transform;
+                //destination = GameObject.FindWithTag("Mineral Field").transform;
+                
+                destination = PlayerManager.instance.selectedMineral;
                 
                 if(gotMine){
                     gotMine = false;
@@ -73,7 +86,7 @@ public class BotScript : MonoBehaviour
                     }
                     sr.flipX = false;
                         SetBooster("UPDOWN");
-                    rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                    //rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
 
                     
                 }
@@ -89,7 +102,7 @@ public class BotScript : MonoBehaviour
                     sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
 
                         SetBooster("LEFTRIGHT"); 
-                    rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                    //rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
 
                 }
             }
@@ -126,7 +139,7 @@ public class BotScript : MonoBehaviour
                     }
                     sr.flipX = false;
                         SetBooster("UPDOWN");
-                    rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                    //rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
 
                     
                 }
@@ -141,23 +154,38 @@ public class BotScript : MonoBehaviour
                     sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
 
                         SetBooster("LEFTRIGHT"); 
-                    rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                    //rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
 
                 }
             }
         }
 
+    }
+
     void FixedUpdate(){
         //rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
         //movement = new Vector2(animator.GetFloat("Horizontal"),animator.GetFloat("Vertical"));
+        if(movement != Vector2.zero && !isMining){
+            if(PlayerManager.instance.curFuel>0){
+                rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+                PlayerManager.instance.HandleFuel(-fuelUsagePerWalk);
 
+            }
+        }
         
         movementDirection = new Vector2(movement.x, movement.y);
         if (movementDirection != Vector2.zero){
             animator.SetFloat("Horizontal", movementDirection.x);
             animator.SetFloat("Vertical", movementDirection.y);
         }
-
+        if (shadowType == ShadowType.booster){
+            if(animator.GetFloat("Speed")!=0 && !animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Att")){
+                booster.SetActive(true);
+            }
+            else{
+                booster.SetActive(false);
+            }
+        }
     }
 
 
@@ -213,7 +241,7 @@ public class BotScript : MonoBehaviour
         //}
     
     }
-        public void SetBooster(string dir){
+    public void SetBooster(string dir){
         if(dir=="UPDOWN"){
             if (shadowType == ShadowType.booster){
                 if(animator.GetFloat("Vertical") < 0){//하
@@ -263,7 +291,7 @@ public class BotScript : MonoBehaviour
                 
             switch(packageType){
                 case PackageType.normal :
-                    PlayerManager.instance.curMineral += PlayerManager.instance.capacity;
+                    PlayerManager.instance.curMineral += capacity;
                     break;
                 default :
                     break;
@@ -273,7 +301,7 @@ public class BotScript : MonoBehaviour
             PlayerManager.instance.curMineral += amount;
         }
 
-        if(floating) PrintFloating("+ "+PlayerManager.instance.capacity.ToString());
+        if(floating) PrintFloating("+ "+capacity.ToString());
 
     }    
     public void PrintFloating(string text, Sprite sprite = null)
@@ -289,4 +317,7 @@ public class BotScript : MonoBehaviour
     public void RepSound(){
         SoundManager.instance.Play("rep"+Random.Range(0,5));
     }    
+    public void DestroyBot(){
+        Destroy(this.gameObject);
+    }
 }

@@ -6,12 +6,19 @@ public class CameraMovement : MonoBehaviour
 {
     public static CameraMovement instance;
     [SerializeField]private Camera cam;
+    public BoxCollider2D map;
+    private float mapMinX, mapMaxX, mapMinY, mapMaxY;
 
     Vector3 dragOrigin;
     public bool onMouse;
     public bool isMoving;
     void Awake(){
         instance = this;
+
+        mapMinX = map.transform.position.x - map.bounds.size.x / 2f;
+        mapMaxX = map.transform.position.x + map.bounds.size.x / 2f;
+        mapMinY = map.transform.position.y - map.bounds.size.y / 2f;
+        mapMaxY = map.transform.position.y + map.bounds.size.y / 2f;
     }
     void Start()
     {
@@ -33,7 +40,8 @@ public class CameraMovement : MonoBehaviour
 
         if(Input.GetMouseButton(0)){
             Vector3 difference = dragOrigin - cam.ScreenToWorldPoint(Input.mousePosition);
-            cam.transform.position += difference;
+            //cam.transform.position += difference;
+            cam.transform.position = ClampCamera(cam.transform.position + difference);
             //isMoving = true;
         }
         else{
@@ -70,4 +78,18 @@ public class CameraMovement : MonoBehaviour
     //             // //GetComponent<RectTransform>().anchoredPosition = Vector2.ClampMagnitude(GetComponent<RectTransform>().anchoredPosition, h);
     //             // cam.transform.position += difference;
     // }
+    Vector3 ClampCamera(Vector3 targetPosition){
+        float camHeight = cam.orthographicSize;
+        float camWidth = cam.orthographicSize * cam.aspect;
+
+        float minX = mapMinX + camWidth;
+        float maxX = mapMaxX - camWidth;
+        float minY = mapMinY + camHeight;
+        float maxY = mapMaxY - camHeight;
+
+        float newX = Mathf.Clamp(targetPosition.x, minX, maxX);
+        float newY = Mathf.Clamp(targetPosition.y, minY, maxY);
+
+        return new Vector3(newX, newY, targetPosition.z);
+    }
 }

@@ -39,6 +39,9 @@ public class DBManager : MonoBehaviour
 
         //건설
         public float[] buildTimeCounter;
+        
+        //채취로봇
+        public List<int> botSaved;
 
     }
     UIManager theUI;
@@ -73,6 +76,9 @@ public class DBManager : MonoBehaviour
 
     //건설
         data.buildTimeCounter = BuildingManager.instance.buildTimeCounter;
+
+    //채취로봇
+        data.botSaved = BotManager.instance.botSaved;
         
 
         BinaryFormatter bf = new BinaryFormatter();
@@ -118,6 +124,7 @@ public class DBManager : MonoBehaviour
                 //건설 // 배열은 널체크
                 
                 if(data.buildTimeCounter.Length!=0) BuildingManager.instance.buildTimeCounter=data.buildTimeCounter ;
+                BotManager.instance.botSaved = data.botSaved;
             }
 
 
@@ -151,6 +158,9 @@ public class DBManager : MonoBehaviour
 
         BuildingManager.instance.BuildingStateCheck();
         
+
+        //봇 관련
+        BotManager.instance.DestroyAllBot();
     }
 
 

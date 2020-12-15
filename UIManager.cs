@@ -99,7 +99,7 @@ public class UIManager : MonoBehaviour
 
                 PlayerManager.instance.StopAuto();
 
-        PlayerManager.instance.goTo = !PlayerManager.instance.goTo;    
+                //PlayerManager.instance.goTo = !PlayerManager.instance.goTo;    
             }
             else{
                 PlayerManager.instance.orderType = OrderType.Enter;
