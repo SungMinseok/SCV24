@@ -21,6 +21,12 @@ public class BuffManager : MonoBehaviour
     public Image centerBuffImg;
     public Text centerBuffText;
     public Button centerBuffBtn;
+    [Header("랜덤박스 UI")]
+    public Text randomAmountText;
+    public GameObject randomOk;
+    public Image randomImage;
+    public Sprite mineral;
+    public Sprite rp;
     void Start()
     {
         
@@ -68,4 +74,40 @@ public class BuffManager : MonoBehaviour
 
 
     }
+    int ranType;
+    int ranNum;
+    public void SetRandomBox(){
+        ranType = Random.Range(0,2);//0,1
+        
+        if(ranType == 0){ //미네랄 50000~100000
+            
+            ranNum = Random.Range(50,100);
+            randomImage.sprite = mineral;
+            randomAmountText.text = (ranNum * 1000).ToString();
+        }
+        else if(ranType == 1){//연구점수 200~2000
+
+            ranNum = Random.Range(10,100); 
+            randomImage.sprite = rp;
+            randomAmountText.text = (ranNum * 20).ToString();
+        }
+        
+
+        Invoke("DelayOkBtn",1f);
+    }
+    public void DelayOkBtn(){
+        
+        randomOk.SetActive(true);
+    }
+    public void GetRandomBox(){
+        if(ranType ==0 ){
+
+            PlayerManager.instance.HandleMineral(int.Parse(randomAmountText.text));
+        }
+        else if(ranType ==1){
+            PlayerManager.instance.HandleRP(int.Parse(randomAmountText.text));
+
+        }
+    }
+
 }

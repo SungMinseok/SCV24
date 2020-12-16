@@ -26,8 +26,8 @@ public class DBManager : MonoBehaviour
     [Header("기타 값 ( Save & Load )")]
         public int helperDone;
         public int curMineral;
+        public int curRP;
         public float curFuel;
-        public float curGas;
 
 
     [Header("장비 단계 ( Save & Load )")]
@@ -43,6 +43,8 @@ public class DBManager : MonoBehaviour
         //채취로봇
         public List<int> botSaved;
 
+        //업그레이드
+        public bool[] unlockedNextUpgrade = new bool[16];//업그레이드 패널 수 만큼, 0,1,2,3/4,5,6,7/8,9,10,11/12,13,14,15
     }
     UIManager theUI;
     PlayerManager thePlayer;
@@ -56,9 +58,9 @@ public class DBManager : MonoBehaviour
         theUI=FindObjectOfType<UIManager>();
         thePlayer=FindObjectOfType<PlayerManager>();
 
-        data.playerX = thePlayer.transform.position.x;
-        data.playerY = thePlayer.transform.position.y;
-        data.playerZ = thePlayer.transform.position.z;
+        // data.playerX = thePlayer.transform.position.x;
+        // data.playerY = thePlayer.transform.position.y;
+        // data.playerZ = thePlayer.transform.position.z;
 
         data.timer = theUI.totalTime;
         
@@ -66,7 +68,7 @@ public class DBManager : MonoBehaviour
         data.helperDone = thePlayer.helperDone;
         data.curMineral = thePlayer.curMineral;
         data.curFuel = thePlayer.curFuel;
-        data.curGas = thePlayer.curGas;
+        data.curRP = thePlayer.curRP;
 
     //[Header("장비 단계 ( Save & Load )")]
         data.weldingLevel = thePlayer.weldingLevel;
@@ -79,6 +81,9 @@ public class DBManager : MonoBehaviour
 
     //채취로봇
         data.botSaved = BotManager.instance.botSaved;
+
+    //업글
+        data.unlockedNextUpgrade = UpgradeManager.instance.unlockedNextUpgrade;
         
 
         BinaryFormatter bf = new BinaryFormatter();
@@ -103,8 +108,8 @@ public class DBManager : MonoBehaviour
                 thePlayer=FindObjectOfType<PlayerManager>();
 
 
-                Vector3 vector =new Vector3(data.playerX, data.playerY, data.playerZ);
-                thePlayer.transform.position = vector;
+                // Vector3 vector =new Vector3(data.playerX, data.playerY, data.playerZ);
+                // thePlayer.transform.position = vector;
 
                 theUI.totalTime = data.timer;
                 
@@ -112,7 +117,7 @@ public class DBManager : MonoBehaviour
                 thePlayer.helperDone =data.helperDone;
                 thePlayer.curMineral =data.curMineral;
                 thePlayer.curFuel =data.curFuel;
-                thePlayer.curGas =data.curGas;
+                thePlayer.curRP =data.curRP;
 
             //[Header("장비 단계 ( Save & Load )")]
                 thePlayer.weldingLevel =data.weldingLevel;
@@ -123,8 +128,12 @@ public class DBManager : MonoBehaviour
 
                 //건설 // 배열은 널체크
                 
-                if(data.buildTimeCounter.Length!=0) BuildingManager.instance.buildTimeCounter=data.buildTimeCounter ;
+                if(data.buildTimeCounter!=null) BuildingManager.instance.buildTimeCounter=data.buildTimeCounter ;
                 BotManager.instance.botSaved = data.botSaved;
+
+                
+                //업글
+                if(data.unlockedNextUpgrade!=null) UpgradeManager.instance.unlockedNextUpgrade = data.unlockedNextUpgrade;
             }
 
 
@@ -134,7 +143,7 @@ public class DBManager : MonoBehaviour
 
     public void ResetDB(){
         PlayerManager.instance.curMineral = 1000000;
-        PlayerManager.instance.curGas = 0;
+        PlayerManager.instance.curRP = 0;
         PlayerManager.instance.curFuel = PlayerManager.instance.defaultFuel;
         PlayerManager.instance.curSpeed = PlayerManager.instance. defaultSpeed;
         PlayerManager.instance.weldingLevel = 1;
@@ -142,10 +151,12 @@ public class DBManager : MonoBehaviour
         PlayerManager.instance.fuelLevel = 1;
         PlayerManager.instance.bodyLevel = 1;
 
+        //업글관련
         //UpgradeManager.instance.ApplyEquipsLevel();//업글패널 갱신
         UpgradeManager.instance.ResetUpgradePanelUI();//업글패널 초기화
         UpgradeManager.instance.ApplyEquipsLevel();
         PlayerManager.instance.RefreshEquip();//현재 장비 적용
+        UpgradeManager.instance.ResetUnlocked();
         
         //건물 관련
         for(int i=0;i<BuildingManager.instance.buildings.Length;i++){
@@ -161,6 +172,8 @@ public class DBManager : MonoBehaviour
 
         //봇 관련
         BotManager.instance.DestroyAllBot();
+
+        
     }
 
 

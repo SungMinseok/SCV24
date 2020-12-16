@@ -6,18 +6,18 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager instance;
-    void Awake(){
+    // void Awake(){
         
-        if (instance != null)
-        {
-            Destroy(this.gameObject);
-        }
-        else
-        {
-            DontDestroyOnLoad(this.gameObject);
-            instance = this;
-        }
-    }
+    //     if (instance != null)
+    //     {
+    //         Destroy(this.gameObject);
+    //     }
+    //     else
+    //     {
+    //         DontDestroyOnLoad(this.gameObject);
+    //         instance = this;
+    //     }
+    // }
     public string btnClickSound ;
     public float totalTime = 86341f; //2 minutes
     
@@ -25,6 +25,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] public Slider fuelBar;
     public Text fuelPercentText;
     [SerializeField] public Text minText;
+    [SerializeField] public Text rpText;
     [SerializeField] public Text timerText;
     [Header("하단 UI")]
     public GameObject buildLock;
@@ -50,6 +51,7 @@ public class UIManager : MonoBehaviour
     [Header("UI Bundle ( Fix Camera )")]
     public GameObject[] uis;
     void Start(){
+        instance = this;
         //StartTimer();
     //UpdateCharacterTexture();
     }
@@ -275,6 +277,5 @@ public class UIManager : MonoBehaviour
         }
         return false;
     }
-
 
 }

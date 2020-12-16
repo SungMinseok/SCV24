@@ -6,7 +6,7 @@ public class Bot{
     public int index;
     public string name;
     public float efficiency;
-    public float price;
+    public int price;
     // public Bot(int a, string b, float c, float d){
     //     index = a;
     //     name = b;
@@ -44,7 +44,8 @@ public class BotManager : MonoBehaviour
                 var temp =transform.GetChild(i).GetComponent<BotScript>();
                 temp.speed = PlayerManager.instance.speed;
                 temp.weldingSec = PlayerManager.instance.weldingSec + Random.Range(PlayerManager.instance.weldingSec * -0.01f, PlayerManager.instance.weldingSec * 0.01f);
-                temp.capacity = (int)(temp.efficiency * PlayerManager.instance.capacity);
+                temp.capacity = Mathf.RoundToInt(temp.efficiency * PlayerManager.instance.capacity);
+                if(temp.capacity==0) temp.capacity = 1;
                 temp.fuelUsagePerWalk = temp.efficiency * PlayerManager.instance.fuelUsagePerWalk;
             }
         }
@@ -54,6 +55,7 @@ public class BotManager : MonoBehaviour
             temp.speed = PlayerManager.instance.speed;
             temp.weldingSec = PlayerManager.instance.weldingSec + Random.Range(PlayerManager.instance.weldingSec * -0.01f, PlayerManager.instance.weldingSec * 0.01f);
             temp.capacity = (int)(temp.efficiency * PlayerManager.instance.capacity);
+            if(temp.capacity==0) temp.capacity = 1;
             temp.fuelUsagePerWalk = temp.efficiency * PlayerManager.instance.fuelUsagePerWalk;
         }
     }
@@ -76,12 +78,17 @@ public class BotManager : MonoBehaviour
         botSaved.RemoveAt(index);
         transform.GetChild(index).GetComponent<BotScript>().DestroyBot();
         //Destroy(transform.GetChild(index));
+        
+        FactoryManager.instance.populationText.text = "인구수 : "+(BotManager.instance.botSaved.Count-1).ToString()+"/"+BotManager.instance.maxPopulation;
     }
     public void DestroyAllBot(){
         for(int i=0;i<transform.childCount;i++){
             botSaved.Clear();
             transform.GetChild(i).GetComponent<BotScript>().DestroyBot();
+            
             //Destroy(transform.GetChild(i));
         }
+        
+        FactoryManager.instance.populationText.text = "인구수 : "+BotManager.instance.botSaved.Count.ToString()+"/"+BotManager.instance.maxPopulation;
     }
 }

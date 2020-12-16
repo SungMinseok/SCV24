@@ -45,7 +45,9 @@ public class PlayerManager : MonoBehaviour
     
     Slider fuelBar;
     Text mineralBar;
+    Text rpBar;
         int calculated = 0;
+        int calculatedRP = 0;
 
     //public float runSpeed = 4f;
     //private float defaultSpeed;
@@ -57,8 +59,8 @@ public class PlayerManager : MonoBehaviour
     [Header("기타 값 ( Save & Load )")]
     public int helperDone;
     public int curMineral;
+    public int curRP;//researchPoint
     public float curFuel;
-    public float curGas;
     [Header("기타 값")]
     public float curSpeed;
     
@@ -181,6 +183,7 @@ public class PlayerManager : MonoBehaviour
 
         //미네랄
         mineralBar = UIManager.instance.minText;
+        rpBar = UIManager.instance.rpText;
 
         miningCoroutine = MiningCoroutine();
 
@@ -587,6 +590,19 @@ public class PlayerManager : MonoBehaviour
         //     mineralBar.text=curMineral.ToString();
         // }
 #endregion
+#region SetRP
+        if(calculatedRP!=curRP){
+            int temp = curRP-calculatedRP;
+            if(temp>=10 || temp <=-10){
+                calculatedRP= calculatedRP + temp/10;
+            }
+            else{
+                calculatedRP= temp>0 ? calculatedRP + 1 : calculatedRP - 1;
+
+            }
+            rpBar.text = string.Format("{0:#,###0}", calculatedRP);
+        }
+#endregion
 
         if (shadowType == ShadowType.booster){
             if(animator.GetFloat("Speed")!=0 && !animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Att")){
@@ -772,6 +788,14 @@ public class PlayerManager : MonoBehaviour
         //         break;
         // }
         // mineralBar.text = curMineral.ToString();
+    }    
+    public void HandleRP(int amount = 0,bool floating = true){
+        if(amount==0){
+        }
+        else{
+            curRP += amount;
+        }
+
     }
     // IEnumerator HandleMineralCoroutine(){
     //     yield return 

@@ -19,6 +19,7 @@ public class FactoryManager : MonoBehaviour
     public Text efficiencyText;
     public Text priceText;
     public Text populationText;
+    public int population;
 
 
 
@@ -36,21 +37,40 @@ public class FactoryManager : MonoBehaviour
         nowNum = num;
 
         nameText.text = BotManager.instance.botInfoList[num].name;
-        efficiencyText.text = "본체의 "+(BotManager.instance.botInfoList[num].efficiency*100).ToString()+"%";
+        efficiencyText.text = "본체의 "+(BotManager.instance.botInfoList[num].efficiency*100).ToString()+"%"+"(<color=#C0F678>"+Mathf.RoundToInt(BotManager.instance.botInfoList[num].efficiency*PlayerManager.instance.capacity)+"</color>)";
         priceText.text = BotManager.instance.botInfoList[num].price.ToString();
 
     }
 
     public void ProduceBtn(){
-        var clone = Instantiate(robots[nowNum],factoryPos.position,Quaternion.identity);
-        clone.GetComponent<BotScript>().botState = BotState.Mine;
-        clone.GetComponent<BotScript>().efficiency = BotManager.instance.botInfoList[nowNum].efficiency;
-        clone.transform.parent = botManager;
-        BotManager.instance.RefreshBotEquip(BotManager.instance.transform.childCount-1);
+        if(BotManager.instance.botSaved.Count<BotManager.instance.maxPopulation){ 
+
+            if(PlayerManager.instance.curMineral>=BotManager.instance.botInfoList[nowNum].price){
+                
+                PlayerManager.instance.HandleMineral(-BotManager.instance.botInfoList[nowNum].price);
+                    
+                var clone = Instantiate(robots[nowNum],factoryPos.position,Quaternion.identity);
+                clone.GetComponent<BotScript>().botState = BotState.Mine;
+                clone.GetComponent<BotScript>().efficiency = BotManager.instance.botInfoList[nowNum].efficiency;
+                clone.transform.parent = botManager;
+                BotManager.instance.RefreshBotEquip(BotManager.instance.transform.childCount-1);
 
 
-        BotManager.instance.botSaved.Add(nowNum);
-        populationText.text = "인구수 : "+BotManager.instance.botSaved.Count.ToString()+"/"+BotManager.instance.maxPopulation;
+                BotManager.instance.botSaved.Add(nowNum);
+                populationText.text = "인구수 : "+BotManager.instance.botSaved.Count.ToString()+"/"+BotManager.instance.maxPopulation;
+
+                SoundManager.instance.Play("ready");
+            } 
+            else{
+                SoundManager.instance.Play("notenoughmin");
+            }
+
+        }
+        else{
+            
+            Debug.Log("인구수 부족");
+        }
+
     }    
     public void ProduceByLoad(){
         var clone = Instantiate(robots[nowNum],factoryPos.position,Quaternion.identity);

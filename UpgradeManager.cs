@@ -58,18 +58,18 @@ public class Upgrade{
 public class UpgradeManager : MonoBehaviour
 {
     public static UpgradeManager instance;
-    void Awake(){
+    // void Awake(){
         
-        if (instance != null)
-        {
-            Destroy(this.gameObject);
-        }
-        else
-        {
-            DontDestroyOnLoad(this.gameObject);
-            instance = this;
-        }
-    }
+    //     if (instance != null)
+    //     {
+    //         Destroy(this.gameObject);
+    //     }
+    //     else
+    //     {
+    //         DontDestroyOnLoad(this.gameObject);
+    //         instance = this;
+    //     }
+    // }
     int column = 4;//기본 서사 신화 전설
     int row = 4;//용접기 연료 ``
     [Header("기본,서사,전설 최대 레벨")]
@@ -101,13 +101,20 @@ public class UpgradeManager : MonoBehaviour
     public Transform upgradePanel_UI;
     public List<Transform> upgradePanelList_UI;
     public List<UpgradePanelInfo> accessibleUpgradePanelList= new List<UpgradePanelInfo>();
+    
 
 
     public Upgrade nowUpgradePanel;
 
     public GameObject unlockCover;
+    public bool[] unlockedNextUpgrade;//업그레이드 패널 수 만큼, 0,1,2,3/4,5,6,7/8,9,10,11/12,13,14,15
+    public Text unlockRequirementText;
     void Start()
+    
     {
+        instance = this;
+        unlockedNextUpgrade = new bool[16];
+        unlockedNextUpgrade.Initialize();
         //int temp = upgradePanel_UI.childCount;
         for(int i=0;i<upgradePanel_UI.childCount;i++){
             int temp =i;
@@ -368,6 +375,10 @@ public class UpgradeManager : MonoBehaviour
             upgradePanelList_UI[num*4+2].GetComponent<Button>().interactable = false;
         }
 
+        //잠금해제 적용.
+        ApplyUnlocked();
+
+
         //현재 레벨 표시를 어디에 할 것인가.
         if(tempLevel%20 == 0 && tempLevel !=0){ //20, 40, 60 일 때
 
@@ -414,42 +425,95 @@ public class UpgradeManager : MonoBehaviour
 
 
         if(num%4 == 1){//서사 해제
-            if(tempLevel == 20){
+            unlockRequirementText.text = "1000";
+            if(tempLevel == 20 && PlayerManager.instance.curRP >= 1000 * (tempLockedNum%4)){
                 unlockCover.SetActive(false);
             }
             else{
-                
                 unlockCover.SetActive(true);
             }
         }
         else if(num%4 == 2){
 
-            if(tempLevel == 40){
+            unlockRequirementText.text = "2000";
+            if(tempLevel == 40 && PlayerManager.instance.curRP >= 1000 * (tempLockedNum%4)){
                 unlockCover.SetActive(false);
             }
             else{
-                
                 unlockCover.SetActive(true);
             }
         }
         else if(num%4 == 3){
 
-            if(tempLevel == 60){
+            unlockRequirementText.text = "3000";
+            if(tempLevel == 60 && PlayerManager.instance.curRP >= 1000 * (tempLockedNum%4)){
                 unlockCover.SetActive(false);
             }
             else{
-                
                 unlockCover.SetActive(true);
             }
         }
         
     }
     public void UnlockBtn(){
-        accessibleUpgradePanelList[tempLockedNum].locked.SetActive(false);
+        //if(tempLockedNum%4 == 1){//서사 해제
+            if(PlayerManager.instance.curRP >= 1000 * (tempLockedNum%4)){
+                PlayerManager.instance.curRP-=1000* (tempLockedNum%4);
+                accessibleUpgradePanelList[tempLockedNum].locked.SetActive(false);
+                unlockedNextUpgrade[tempLockedNum] = true;
+            }
+            else{
+
+            }
+        //     else{
+        //     }
+        // }
+        // else if(tempLockedNum%4 == 2){
+
+        //     if(tempLevel == 40){
+        //         unlockCover.SetActive(false);
+        //     }
+        //     else{
+        //         unlockCover.SetActive(true);
+        //     }
+        // }
+        // else if(tempLockedNum%4 == 3){
+
+        //     if(tempLevel == 60){
+        //         unlockCover.SetActive(false);
+        //     }
+        //     else{
+        //         unlockCover.SetActive(true);
+        //     }
+        // }
+
+        //accessibleUpgradePanelList[tempLockedNum].locked.SetActive(false);
     }
     public int AddTotalLevel(){
         int total = 0;
         total = PlayerManager.instance.weldingLevel + PlayerManager.instance.engineLevel + PlayerManager.instance.fuelLevel + PlayerManager.instance.bodyLevel;
         return total;
+    }
+    public void ApplyUnlocked(){
+        for(int i=0;i<unlockedNextUpgrade.Length;i++){
+            if(i%4!=0){
+
+                if(unlockedNextUpgrade[i]){
+                    accessibleUpgradePanelList[i].locked.SetActive(false);
+                }
+                else{
+                    accessibleUpgradePanelList[i].locked.SetActive(true);
+                }
+            }
+        }
+    }
+    public void ResetUnlocked(){
+        for(int i=0;i<unlockedNextUpgrade.Length;i++){
+            if(i%4!=0){
+                accessibleUpgradePanelList[i].locked.SetActive(true);
+                unlockedNextUpgrade[i] = false;
+                
+            }
+        }
     }
 }
