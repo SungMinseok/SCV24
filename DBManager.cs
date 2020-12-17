@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 public class DBManager : MonoBehaviour
 {    
     public static DBManager instance;
+    public bool loadComplete;
     private void Awake()
     {
         instance = this;
@@ -45,6 +46,9 @@ public class DBManager : MonoBehaviour
 
         //업그레이드
         public bool[] unlockedNextUpgrade = new bool[16];//업그레이드 패널 수 만큼, 0,1,2,3/4,5,6,7/8,9,10,11/12,13,14,15
+
+        //팩토리
+        public bool[] unlockedNextProduce = new bool[8];//업그레이드 패널 수 만큼, 0,1,2,3/4,5,6,7/8,9,10,11/12,13,14,15
     }
     UIManager theUI;
     PlayerManager thePlayer;
@@ -84,6 +88,8 @@ public class DBManager : MonoBehaviour
 
     //업글
         data.unlockedNextUpgrade = UpgradeManager.instance.unlockedNextUpgrade;
+    //팩토리
+        data.unlockedNextProduce = FactoryManager.instance.unlockedNextProduce;
         
 
         BinaryFormatter bf = new BinaryFormatter();
@@ -134,6 +140,9 @@ public class DBManager : MonoBehaviour
                 
                 //업글
                 if(data.unlockedNextUpgrade!=null) UpgradeManager.instance.unlockedNextUpgrade = data.unlockedNextUpgrade;
+
+                //팩토리
+                if(data.unlockedNextProduce!=null) FactoryManager.instance.unlockedNextProduce = data.unlockedNextProduce;
             }
 
 
@@ -143,7 +152,7 @@ public class DBManager : MonoBehaviour
 
     public void ResetDB(){
         PlayerManager.instance.curMineral = 1000000;
-        PlayerManager.instance.curRP = 0;
+        PlayerManager.instance.curRP = 10000;
         PlayerManager.instance.curFuel = PlayerManager.instance.defaultFuel;
         PlayerManager.instance.curSpeed = PlayerManager.instance. defaultSpeed;
         PlayerManager.instance.weldingLevel = 1;
@@ -173,7 +182,8 @@ public class DBManager : MonoBehaviour
         //봇 관련
         BotManager.instance.DestroyAllBot();
 
-        
+        //팩토리
+        FactoryManager.instance.ResetData();
     }
 
 

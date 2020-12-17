@@ -110,6 +110,7 @@ public class PlayerManager : MonoBehaviour
         [HideInInspector]public GameObject workLight;
         Transform centerPos;
         Transform mineralPos;
+        public GameObject miningMineral;
     public Transform destination;
     IEnumerator miningCoroutine;
     bool onX;
@@ -124,6 +125,7 @@ public class PlayerManager : MonoBehaviour
 
     public GameObject floatingText;
     public GameObject floatingCanvas;
+
 
 
     
@@ -189,6 +191,7 @@ public class PlayerManager : MonoBehaviour
 
         //LoadData();
         DBManager.instance.CallLoad(0);
+        DBManager.instance.loadComplete = true;
 
         //UpgradeManager.instance.ApplyEquipsLevel();
         RefreshEquip();
@@ -202,6 +205,9 @@ public class PlayerManager : MonoBehaviour
 
          //채취로봇
         BotManager.instance.LoadBot();
+
+        //팩토리
+        FactoryManager.instance. ApplyUnlocked();
 
 
         
@@ -383,6 +389,7 @@ public class PlayerManager : MonoBehaviour
                     if(gotMine){
                         gotMine = false;
                         isMining = true;
+                    miningMineral = destination.gameObject;
                         destination = null;
 
                     }
@@ -826,6 +833,7 @@ public class PlayerManager : MonoBehaviour
             if(collision.tag == "Mineral Field"){
                 if(!isHolding){
                     gotMine = true;
+                    //miningMineral = collision.gameObject.GetComponent<MineralScript>();
                 }
                 //Debug.Log("미네랄 발견");
             }        
@@ -853,18 +861,20 @@ public class PlayerManager : MonoBehaviour
         //     placeFlag = true;
             if(collision.tag == "Mineral Field"){
                     gotMine = false;
-        isMining = false;
+                isMining = false;
+                //if(isHolding) miningMineral.GotMined(capacity);
+                //miningMineral = null;
             }        
             
             else if(collision.tag == "Center"){
                     gotDestination = false;
             }            
             
-            if(UIManager.instance.selectPanel.activeSelf){
-                UIManager.instance.selectPanel.GetComponent<Animator>().SetTrigger("out");
-                //SetActive(true);
-                enterableBuilding = "";
-            }
+            // if(UIManager.instance.selectPanel.activeSelf){
+            //     UIManager.instance.selectPanel.GetComponent<Animator>().SetTrigger("out");
+            //     //SetActive(true);
+            //     enterableBuilding = "";
+            // }
         //}
     
     }
@@ -886,6 +896,8 @@ public class PlayerManager : MonoBehaviour
         mineral.gameObject.SetActive(true);
 
 
+        miningMineral.GetComponent<MineralScript>().GotMined(capacity);
+        miningMineral = null;
         //미네랄 종류 선택()
         packageType = PackageType.normal;
     }

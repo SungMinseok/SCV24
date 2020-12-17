@@ -73,7 +73,10 @@ public class BuildingManager : MonoBehaviour
         // buildingList[9].gameObject.SetActive(false);
     }
     void Update(){
-        if(ConstructingCheck()) BuildTimeCount();
+        if(DBManager.instance.loadComplete){
+
+            if(ConstructingCheck()) BuildTimeCount();
+        }
     }
     
     public int nowBuilding;
@@ -139,6 +142,7 @@ public class BuildingManager : MonoBehaviour
     public void BuildTimeCount(){
         for(int i=0;i< buildingsInMap.Length; i++){
             //if(buildingsInMap[i].transform.GetChild(0).gameObject.activeSelf){
+            if(isConstructing[i]){
                 if(buildTimeCounter[i]>0&&buildTimeCounter[i]<buildings[i].buildTime){
                     buildTimeCounter[i] += Time.deltaTime;
                     //if(!isConstructing[i]) isConstructing[i] = true;
@@ -148,7 +152,12 @@ public class BuildingManager : MonoBehaviour
                         buildingsInMap[i].transform.GetChild(0).GetComponent<Animator>().SetFloat("Speed",6/buildings[i].buildTime);
                     }
                 }
-            //}
+                else{
+                    isConstructing[i] = false;
+                    buildingsInMap[i].transform.GetChild(0).gameObject.SetActive(false); 
+                    buildingsInMap[i].transform.GetChild(1).gameObject.SetActive(true); 
+                }
+            }
         }
     }
 
@@ -184,7 +193,7 @@ public class BuildingManager : MonoBehaviour
                     //Debug.Log(i+"번 건물 건설완료됨 ");
                     buildingList[7*i+4].gameObject.SetActive(false);//잠금이미지 비활성화
                     buildingList[7*i+6].gameObject.SetActive(true);//텍스트 활성화
-                    //buildingsInMap[i].transform.GetChild(1).gameObject.SetActive(true);
+                    buildingsInMap[i].transform.GetChild(1).gameObject.SetActive(true);
                 }
                 else{
                     //Debug.Log(i+"번 건물 미건설");
@@ -198,6 +207,7 @@ public class BuildingManager : MonoBehaviour
 
             buildingList[7*flag+4].gameObject.SetActive(false);//잠금이미지 비활성화
             buildingList[7*flag+6].gameObject.SetActive(true);//텍스트 활성화
+            buildingsInMap[flag].transform.GetChild(1).gameObject.SetActive(true);
         }   
     }
     // public void SetBuilt(int num){

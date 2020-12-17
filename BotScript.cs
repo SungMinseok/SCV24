@@ -40,6 +40,7 @@ public class BotScript : MonoBehaviour
     bool miningFlag;
     public GameObject floatingText;
     public GameObject floatingCanvas;
+    public GameObject miningMineral;
     void Start()
     {
         
@@ -73,6 +74,7 @@ public class BotScript : MonoBehaviour
                 if(gotMine){
                     gotMine = false;
                     isMining = true;
+                    miningMineral = destination.gameObject;
                     destination = null;
 
                 }
@@ -200,7 +202,8 @@ public class BotScript : MonoBehaviour
         miningFlag = false;
         mineral.gameObject.SetActive(true);
 
-
+        miningMineral.GetComponent<MineralScript>().GotMined(capacity);
+        miningMineral = null;
         //미네랄 종류 선택()
         //packageType = PackageType.normal;
     }
@@ -211,6 +214,7 @@ public class BotScript : MonoBehaviour
             if(collision.tag == "Mineral Field"){
                 if(!isHolding){
                     gotMine = true;
+                    //miningMineral = collision.gameObject.GetComponent<MineralScript>();
                 }
                 //Debug.Log("미네랄 발견");
             }        
@@ -233,6 +237,9 @@ public class BotScript : MonoBehaviour
             if(collision.tag == "Mineral Field"){
                     gotMine = false;
         isMining = false;
+        
+        // if(isHolding) miningMineral.GotMined(capacity);
+        // miningMineral = null;
             }        
             
             else if(collision.tag == "Center"){
