@@ -94,17 +94,17 @@ public class DBManager : MonoBehaviour
 
         BinaryFormatter bf = new BinaryFormatter();
         //FileStream file = File.Create(Application.persistentDataPath + "/SaveFile" + num +".dat");
-        FileStream file = File.Create(Application.persistentDataPath + "/SaveFile" + num +".dat");
+        FileStream file = File.Create(Application.persistentDataPath + "/SaveFile.dat");
         bf.Serialize(file, data);
         file.Close();
     }
 
     public void CallLoad(int num){
         BinaryFormatter bf = new BinaryFormatter();
-        FileInfo fileCheck = new FileInfo(Application.persistentDataPath + "/SaveFile" + num +".dat");
+        FileInfo fileCheck = new FileInfo(Application.persistentDataPath + "/SaveFile.dat");
 
         if(fileCheck.Exists){
-        FileStream file = File.Open(Application.persistentDataPath + "/SaveFile" + num +".dat", FileMode.Open);
+        FileStream file = File.Open(Application.persistentDataPath + "/SaveFile.dat", FileMode.Open);
         
             if(file != null && file.Length >0){
 
@@ -187,21 +187,4 @@ public class DBManager : MonoBehaviour
     }
 
 
-    void OnApplicationQuit(){
-        CallSave(0);
-    }
-    void OnApplicationPause(bool pause)
-    {
-        if (pause)
-        {
-            isPaused = true;
-            CallSave(0);
-            /* 앱이 비활성화 되었을 때 처리 */    
-        }
-        else{
-            if(isPaused){
-                isPaused = false;
-            }
-        }
-    }
 }

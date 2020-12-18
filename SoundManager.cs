@@ -40,6 +40,12 @@ public class Sound{
     {
         source.volume = volume;
     }
+    public bool isPlaying(){
+        if(source.isPlaying){
+            return true;
+        }
+        return false;
+    }
 }
 public class SoundManager : MonoBehaviour
 
@@ -55,7 +61,7 @@ public class SoundManager : MonoBehaviour
     [Header("효과음 플레이어")]
     [SerializeField] AudioSource[] sfxPlayer;
 
-    void Start()
+    void Awake()
     {
         instance =this;
         bgmPlayer.clip = bgmSounds[0].clip;
@@ -95,6 +101,28 @@ public class SoundManager : MonoBehaviour
                 return;
             }
         }
+    }    
+    public void Stop(string _soundName){
+        for (int i = 0; i < sfxSounds.Length; i++)
+        {
+            if(_soundName == sfxSounds[i].soundName)
+            {
+                sfxSounds[i].Stop();
+                return;
+            }
+        }
+    }
+    public bool IsPlaying(string _soundName){
+        for (int i = 0; i < sfxSounds.Length; i++)
+        {
+            if(_soundName == sfxSounds[i].soundName)
+            {
+                if(sfxSounds[i].isPlaying()){
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void ClickSound(){

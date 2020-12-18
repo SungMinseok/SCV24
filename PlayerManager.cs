@@ -25,16 +25,10 @@ public class PlayerManager : MonoBehaviour
 {
     public static PlayerManager instance;    
     void Awake(){
+        instance = this;
         
-        if (instance != null)
-        {
-            Destroy(this.gameObject);
-        }
-        else
-        {
-            DontDestroyOnLoad(this.gameObject);
-            instance = this;
-        }
+        DBManager.instance.CallLoad(0);
+        DBManager.instance.loadComplete = true;
     }
     [SerializeField] public UnitType type;
     [SerializeField] public ShadowType shadowType;
@@ -189,19 +183,18 @@ public class PlayerManager : MonoBehaviour
 
         miningCoroutine = MiningCoroutine();
 
-        //LoadData();
-        DBManager.instance.CallLoad(0);
-        DBManager.instance.loadComplete = true;
+        // //LoadData();
+        // DBManager.instance.CallLoad(0);
+        // DBManager.instance.loadComplete = true;
 
         //UpgradeManager.instance.ApplyEquipsLevel();
         RefreshEquip();
 
         //이거 두개 같이 실행시켜야 UI 제대로 적용됨
-        UpgradeManager.instance.ResetUpgradePanelUI();
-        UpgradeManager.instance.ApplyEquipsLevel();
-        //BuildingManager.instance.ResetBuilding();
+        // UpgradeManager.instance.ResetUpgradePanelUI();
+        // UpgradeManager.instance.ApplyEquipsLevel();
         //////////////////////////////
-         BuildingManager.instance.BuildingStateCheck();
+         //BuildingManager.instance.BuildingStateCheck();
 
          //채취로봇
         BotManager.instance.LoadBot();
@@ -508,7 +501,7 @@ public class PlayerManager : MonoBehaviour
             if(goTo){
                 UIManager.instance.DisableColliders();
                 
-        if(orderType!=OrderType.Build )autoPanel.SetActive(false);
+        //if(orderType!=OrderType.Build )autoPanel.SetActive(false);
                 //if(isAuto || MobileControl.instance.isTouch){
                 if(isAuto){
                     goTo = false;  //오토모드중 움직이면 오토 중지.
@@ -574,6 +567,10 @@ public class PlayerManager : MonoBehaviour
 #region SetMineral
         //if(int.Parse(mineralBar.text)!=curMineral){
         if(calculated!=curMineral){
+            if(!SoundManager.instance.IsPlaying("fill")){
+                
+                SoundManager.instance.Play("fill");
+            }
             ////Debug.Log("미네랄 업");
             //int temp = curMineral-int.Parse(mineralBar.text);
             int temp = curMineral-calculated;
@@ -592,6 +589,9 @@ public class PlayerManager : MonoBehaviour
             mineralBar.text = string.Format("{0:#,###0}", calculated);
             
             //mineralBar.text = ((int)Mathf.Lerp(int.Parse(mineralBar.text), curMineral, Time.deltaTime *speed )).ToString();
+        }
+        else{
+            SoundManager.instance.Stop("fill");
         }
         // else if(int.Parse(mineralBar.text)>=curMineral){
         //     mineralBar.text=curMineral.ToString();
@@ -747,12 +747,21 @@ public class PlayerManager : MonoBehaviour
                 default :
                     break;
             }
+            if(floating) PrintFloating("+ "+capacity.ToString());
         }
         else{
             curMineral += amount;
+            if(floating){
+                if(amount>=0){
+                    PrintFloating("+ "+amount.ToString());
+                }
+                else{
+                    PrintFloating("- "+(-amount).ToString());
+                }
+            }
         }
 
-        if(floating) PrintFloating("+ "+capacity.ToString());
+        
 
         //SaveData("curMineral");
 
@@ -973,8 +982,13 @@ public class PlayerManager : MonoBehaviour
 
         if (text != "")
         {
-            var clone = Instantiate(floatingText, floatingCanvas.transform.position, Quaternion.identity);
-            clone.GetComponent<Text>().text = text;
+            //var clone = Instantiate(floatingText, floatingCanvas.transform.position, Quaternion.identity);
+            var clone = Instantiate(floatingText, new Vector2(transform.position.x,transform.position.y+0.3f), Quaternion.identity);
+            clone.transform.GetChild(0).GetComponent<Text>().text = text;
+            if(floatingCanvas.transform.childCount>=1){
+
+                clone.GetComponent<Canvas>().sortingOrder = floatingCanvas.transform.GetChild(floatingCanvas.transform.childCount-1).transform.GetComponent<Canvas>().sortingOrder+1;
+            }
             clone.transform.SetParent(floatingCanvas.transform);
         }
         // else
@@ -1075,6 +1089,14 @@ public class PlayerManager : MonoBehaviour
         CMCamera.SetActive(true);
         orderType = type;
         if(type == OrderType.Build){
+                
+            SoundManager.instance.Play("btn1");
+            isAuto = false;
+            goTo = true;    
+            YesSound();
+            destination = GameObject.Find(where).transform;
+        }        
+        if(type == OrderType.Enter){
                 
             SoundManager.instance.Play("btn1");
             isAuto = false;

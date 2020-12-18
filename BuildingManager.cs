@@ -71,6 +71,7 @@ public class BuildingManager : MonoBehaviour
         //처음 두 건물 오픈.
         // buildingList[4].gameObject.SetActive(false);
         // buildingList[9].gameObject.SetActive(false);
+        BuildingManager.instance.BuildingStateCheck();
     }
     void Update(){
         if(DBManager.instance.loadComplete){
@@ -105,7 +106,7 @@ public class BuildingManager : MonoBehaviour
         nameText.text = buildings[num].name;
         desText.text = buildings[num].des;
         buildTimeText.text = buildings[num].buildTime.ToString()+"초";
-        priceText.text = buildings[num].price.ToString();
+        priceText.text = string.Format("{0:#,###0}", buildings[num].price);//buildings[num].price.ToString();
 
         buildPanel.SetActive(true);
     }
@@ -154,6 +155,7 @@ public class BuildingManager : MonoBehaviour
                 }
                 else{
                     isConstructing[i] = false;
+                    BuildingStateCheck(i);
                     buildingsInMap[i].transform.GetChild(0).gameObject.SetActive(false); 
                     buildingsInMap[i].transform.GetChild(1).gameObject.SetActive(true); 
                 }

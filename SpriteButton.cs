@@ -30,8 +30,8 @@ public class SpriteButton : MonoBehaviour
         if(!UIManager.instance.OnUI()){
 
             if(buildingType == BuildingType.Enterable){
-
-                UIManager.instance.TogglegoTo(objectName);
+                PlayerManager.instance.Order(objectName,OrderType.Enter);
+                //UIManager.instance.TogglegoTo(objectName);
             }
             else if(buildingType == BuildingType.Resource){
 

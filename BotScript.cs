@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,7 +46,8 @@ public class BotScript : MonoBehaviour
         
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
-        sr = GetComponent<SpriteRenderer>();        
+        sr = GetComponent<SpriteRenderer>();   
+        floatingCanvas = PlayerManager.instance.floatingCanvas;     
         
         if(shadowType==ShadowType.booster){
             
@@ -316,8 +317,20 @@ public class BotScript : MonoBehaviour
 
         if (text != "")
         {
-            var clone = Instantiate(floatingText, floatingCanvas.transform.position, Quaternion.identity);
-            clone.GetComponent<Text>().text = text;
+            //var clone = Instantiate(floatingText, floatingCanvas.transform.position, Quaternion.identity);
+            var clone = Instantiate(floatingText, new Vector2(transform.position.x,transform.position.y+0.3f), Quaternion.identity);
+            clone.transform.GetChild(0).GetComponent<Text>().text = text;
+            if(floatingCanvas.transform.childCount>=1){
+                var temp = floatingCanvas.transform.GetChild(floatingCanvas.transform.childCount-1).transform;
+                //Vector2 tempVect = new Vector2(temp.localScale.x * 1.05f,temp.localScale.y *1.05f);
+                //clone.transform.localScale = new Vector2(temp.localScale.x+ 0.05f,temp.localScale.y +0.05f);;
+                clone.GetComponent<Canvas>().sortingOrder = temp.GetComponent<Canvas>().sortingOrder+1;
+            
+            
+                // Debug.Log(clone.transform.localScale);
+                // Debug.Log(floatingCanvas.transform.GetChild(floatingCanvas.transform.childCount-1).transform.localScale);
+            
+            }
             clone.transform.SetParent(floatingCanvas.transform);
         }
     }

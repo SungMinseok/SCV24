@@ -29,6 +29,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] public Text timerText;
     [Header("하단 UI")]
     public GameObject buildLock;
+    public Text statusInfoText;
     bool timerBtn;
     int second, minute, hour, day;
 
@@ -46,11 +47,11 @@ public class UIManager : MonoBehaviour
     [Header("빌딩 입장")]
     public GameObject[] buildings;
     public GameObject selectPanel;
-    //public SpriteRenderer center;
     
     [Header("UI Bundle ( Fix Camera )")]
     public GameObject[] uis;
-    void Start(){
+    
+    void Awake(){
         instance = this;
         //StartTimer();
     //UpdateCharacterTexture();

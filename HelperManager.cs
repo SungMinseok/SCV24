@@ -5,7 +5,7 @@ using UnityEngine;
 public class HelperManager : MonoBehaviour
 {
     public static HelperManager instance;
-
+    public SoundManager theSound;
     public bool flag;
     public GameObject bundle;
     public GameObject[] helpers; //미네랄, 센터, 상단UI
@@ -17,7 +17,9 @@ public class HelperManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        SoundManager.instance.Play("ready");
+        UIManager.instance.StartTimer();
+        //Invoke("PlayerManager.instance.GameStart",0.01f) ;
     }
     public void HelperOn(){
         StartCoroutine(HelperCoroutine());

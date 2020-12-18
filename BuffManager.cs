@@ -77,6 +77,7 @@ public class BuffManager : MonoBehaviour
     int ranType;
     int ranNum;
     public void SetRandomBox(){
+        SoundManager.instance.Play("recall");
         ranType = Random.Range(0,2);//0,1
         
         if(ranType == 0){ //미네랄 50000~100000
@@ -93,10 +94,10 @@ public class BuffManager : MonoBehaviour
         }
         
 
-        Invoke("DelayOkBtn",1f);
+        Invoke("DelayOkBtn",0.7f);
     }
     public void DelayOkBtn(){
-        
+        SoundManager.instance.Play("rescue");
         randomOk.SetActive(true);
     }
     public void GetRandomBox(){
