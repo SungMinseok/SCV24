@@ -58,9 +58,6 @@ public class Upgrade{
 public class UpgradeManager : MonoBehaviour
 {
     public static UpgradeManager instance;
-    void Awake(){
-        instance = this;
-    }
     int column = 4;//기본 서사 신화 전설
     int row = 4;//용접기 연료 ``
     [Header("기본,서사,전설 최대 레벨")]
@@ -100,11 +97,17 @@ public class UpgradeManager : MonoBehaviour
     public Upgrade nowUpgradePanel;
 
     public GameObject unlockCover;
-    public bool[] unlockedNextUpgrade;//업그레이드 패널 수 만큼, 0,1,2,3/4,5,6,7/8,9,10,11/12,13,14,15
+    public bool[] unlockedNextUpgrade = new bool[16];//업그레이드 패널 수 만큼, 0,1,2,3/4,5,6,7/8,9,10,11/12,13,14,15
     public Text unlockRequirementText;
+    //public List<bool> testList = new List<bool>(new bool[16]);
+    
+    void Awake(){
+        instance = this;
+    }
     void Start()
     
     {
+        //if(unlockedNextUpgrade.Length ==0) unlockedNextUpgrade = new bool[16];
         // unlockedNextUpgrade = new bool[16];
         // unlockedNextUpgrade.Initialize();
         //int temp = upgradePanel_UI.childCount;
@@ -304,7 +307,8 @@ public class UpgradeManager : MonoBehaviour
             ShowUpgradePanel(nowPage);  //최신화
         }
         else{
-            SoundManager.instance.Play("notenoughmin");
+            //SoundManager.instance.Play("notenoughmin");
+            UIManager.instance.SetPopUp("미네랄이 부족합니다.","notenoughmin");
         }
         
 
@@ -458,8 +462,8 @@ public class UpgradeManager : MonoBehaviour
     }
     public void UnlockBtn(){
         //if(tempLockedNum%4 == 1){//서사 해제
-            if(PlayerManager.instance.curRP >= 1000 * (tempLockedNum%4)){
-                PlayerManager.instance.curRP-=1000* (tempLockedNum%4);
+            if(PlayerManager.instance.curRP >= rpRequirement [tempLockedNum%4-1]){
+                PlayerManager.instance.curRP-=rpRequirement [tempLockedNum%4-1];
                 accessibleUpgradePanelList[tempLockedNum].locked.SetActive(false);
                 unlockedNextUpgrade[tempLockedNum] = true;
             }
@@ -509,6 +513,7 @@ public class UpgradeManager : MonoBehaviour
         }
     }
     public void ResetUnlocked(){
+        unlockedNextUpgrade = new bool[16];
         for(int i=0;i<unlockedNextUpgrade.Length;i++){
             if(i%4!=0){
                 accessibleUpgradePanelList[i].locked.SetActive(true);

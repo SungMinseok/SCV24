@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 [System.Serializable]
 public class Bot{
     public int index;
@@ -20,7 +21,15 @@ public class BotManager : MonoBehaviour
     public static BotManager instance;
     public List<Bot> botInfoList;
     public List<int> botSaved;
-    public int maxPopulation = 20;
+    public int maxPopulation = 5;
+    public int populationLimit = 50;
+    public int[] prices= new int[9];
+
+    [Header("보급고 UI")]
+    public Text populationText;
+    public Text priceText;
+    public GameObject AddBtn;
+    public GameObject depotPanel;
     // Start is called before the first frame update
     void Awake()
     {
@@ -29,6 +38,7 @@ public class BotManager : MonoBehaviour
     void Start(){
         //botSaved = new List<int>();
         //Debug.Log(botSaved.Count);
+        RefreshPopulationState();
     }
 
     // Update is called once per frame
@@ -90,5 +100,37 @@ public class BotManager : MonoBehaviour
         }
         
         FactoryManager.instance.populationText.text = "인구수 : "+BotManager.instance.botSaved.Count.ToString()+"/"+BotManager.instance.maxPopulation;
+    }
+    
+    public void RefreshPopulationState(){
+        if(maxPopulation<populationLimit){
+            //Debug.Log(maxPopulation/5 -1);
+            //Debug.Log("5/5 " +5/5);
+            priceText.text = prices[(maxPopulation/5-1) ].ToString();
+            populationText.text = maxPopulation.ToString() + " >> " + (maxPopulation + 5).ToString();
+            AddBtn.SetActive(true);
+
+        }
+        else{
+            priceText.text = "N/A";
+            populationText.text = maxPopulation.ToString();
+            AddBtn.SetActive(false);
+        }
+
+    }
+    public void AddPopulation(){
+        if(PlayerManager.instance.curMineral >= prices[(maxPopulation/5-1) ]){
+            //depotPanel.SetActive(false);
+            SoundManager.instance.Play("up");
+            PlayerManager.instance.HandleMineral(-prices[(maxPopulation/5-1) ]);
+            maxPopulation += 5;
+            
+            FactoryManager.instance.populationText.text = "인구수 : "+botSaved.Count.ToString()+"/"+maxPopulation;
+            RefreshPopulationState();
+        }
+        else{
+            SoundManager.instance.Play("notenoughmin");
+
+        }
     }
 }

@@ -19,6 +19,7 @@ public enum OrderType{
         Enter,
         Stop,
         Build,
+        Get,
 }
 
 public class PlayerManager : MonoBehaviour
@@ -27,8 +28,10 @@ public class PlayerManager : MonoBehaviour
     void Awake(){
         instance = this;
         
-        DBManager.instance.CallLoad(0);
+        if(DBManager.instance.ActivateLoad){
+            DBManager.instance.CallLoad(0);
         DBManager.instance.loadComplete = true;
+        }
     }
     [SerializeField] public UnitType type;
     [SerializeField] public ShadowType shadowType;
@@ -51,7 +54,7 @@ public class PlayerManager : MonoBehaviour
 
     //public float miningSpeed = 5f;
     [Header("기타 값 ( Save & Load )")]
-    public int helperDone;
+    public bool helperDone;
     public int curMineral;
     public int curRP;//researchPoint
     public float curFuel;
@@ -109,6 +112,7 @@ public class PlayerManager : MonoBehaviour
     IEnumerator miningCoroutine;
     bool onX;
     bool onY;
+    public GameObject effect;
     [Header("지점 이동")]//auto 버튼 눌렀을 때
         public bool goTo;
         public bool buildStart;
@@ -138,10 +142,10 @@ public class PlayerManager : MonoBehaviour
             isAlive = true;
             canMove = true;
             rb = GetComponent<Rigidbody2D>();
-            if (GameObject.Find("Shadow") != null){
+            // if (GameObject.Find("Shadow") != null){
                 
-                animatorChild = transform.Find("Shadow").GetComponent<Animator>();
-            }
+            //     animatorChild = transform.Find("Shadow").GetComponent<Animator>();
+            // }
         }
         else if(type==UnitType.shadow){
             transform.localPosition = new Vector2(0.015f,-0.015f);
@@ -166,12 +170,7 @@ public class PlayerManager : MonoBehaviour
         sr = GetComponent<SpriteRenderer>();
         //defaultSpeed = speed;
 
-        //초기설정
-        weldingSec = defaultWeldingSec;
-        curSpeed = defaultSpeed;
-        maxFuel = defaultFuel;
-        capacity = defaultCapacity;
-        //selectedMineral = mineralPos;
+
 
         //체력
         fuelBar = UIManager.instance.fuelBar;
@@ -184,9 +183,24 @@ public class PlayerManager : MonoBehaviour
         miningCoroutine = MiningCoroutine();
 
         // //LoadData();
+        //초기설정
+        if(!DBManager.instance.loadComplete){
+
+            weldingSec = defaultWeldingSec;
+            curSpeed = defaultSpeed;
+            maxFuel = defaultFuel;
+            capacity = defaultCapacity;
+
+            curMineral = 0;
+            curFuel = 300;
+            curRP = 0;
+            //selectedMineral = mineralPos;
+        }
         // DBManager.instance.CallLoad(0);
         // DBManager.instance.loadComplete = true;
 
+            fuelBar.value = (float) curFuel / (float) maxFuel;
+        UIManager.instance.fuelPercentText.text = (Mathf.RoundToInt(fuelBar.value*100)).ToString() + "%";
         //UpgradeManager.instance.ApplyEquipsLevel();
         RefreshEquip();
 
@@ -465,6 +479,7 @@ public class PlayerManager : MonoBehaviour
                         mineral.gameObject.SetActive(false);
                         packageType = PackageType.none;
                         //Debug.Log("미네랄 저장");
+Instantiate(effect, mineral.transform.position, Quaternion.identity);
                     }
                     else if(Mathf.Abs(transform.position.y - destination.position.y)>=
                     destination.GetComponent<BoxCollider2D>().size.y * destination.localScale.y /2){                    
@@ -520,6 +535,18 @@ public class PlayerManager : MonoBehaviour
                         buildStart = true;
                         StopAuto();
                     }
+                    else if(orderType == OrderType.Get){
+                        if(destination.GetComponent<SpriteButton>().buildingType == BuildingType.Drop){
+                            
+                            BuffManager.instance.GetDropBox(destination.gameObject);
+                        }                        
+                        else if(destination.GetComponent<SpriteButton>().buildingType == BuildingType.Item){
+                            
+                            GetItem(destination.gameObject);
+                        }
+                        StopAuto();
+                        //Debug.Log("획득");
+                    }
                     orderType = OrderType.Stop;
                     destination = null;
                     //StopAuto();
@@ -530,7 +557,12 @@ public class PlayerManager : MonoBehaviour
                 }
                 //길찾기
                 else if(destination!=null && Mathf.Abs(transform.position.y - destination.position.y)>=
-                destination.GetComponent<BoxCollider2D>().size.y * destination.localScale.y /2){                    
+                0.1f){     
+                //destination.GetComponent<BoxCollider2D>().size.y * destination.localScale.y /2){     
+                    //Debug.Log(destination.GetComponent<BoxCollider2D>().size.y);
+                    //Debug.Log(destination.localScale.y /2);
+
+
                     if(transform.position.y > destination.position.y){
                         movement = new Vector2(0,-1);
                     }
@@ -546,6 +578,11 @@ public class PlayerManager : MonoBehaviour
                     
                 }
                 else if(destination!=null && Mathf.Abs(transform.position.x - destination.position.x)>=0.1f){
+  
+//                    Debug.Log(destination.GetComponent<BoxCollider2D>().size.x);
+//                    Debug.Log(destination.localScale.x /2);
+
+
                     if(transform.position.x > destination.position.x){
                         movement = new Vector2(-1,0);
                     }
@@ -964,19 +1001,19 @@ public class PlayerManager : MonoBehaviour
     
 
 
-    void SaveData(string key){
-        switch(key){
-            case "curMineral" : 
-                PlayerPrefs.SetInt(key, curMineral);
-                break;
-            case "helperDone" : 
-                PlayerPrefs.SetInt(key, helperDone);
-                break;
+    // void SaveData(string key){
+    //     switch(key){
+    //         case "curMineral" : 
+    //             PlayerPrefs.SetInt(key, curMineral);
+    //             break;
+    //         case "helperDone" : 
+    //             PlayerPrefs.SetInt(key, helperDone);
+    //             break;
 
-        }
+    //     }
         
-        //Debug.Log("저장성공");
-    }
+    //     //Debug.Log("저장성공");
+    // }
     public void PrintFloating(string text, Sprite sprite = null)
     {
 
@@ -1083,18 +1120,19 @@ public class PlayerManager : MonoBehaviour
         UIManager.instance.StartTimer();
     }    
     
-    public void Order(string where, OrderType type){
+    public void Order(Transform where, OrderType type){
         StopAuto();
         autoPanel.SetActive(true);
         CMCamera.SetActive(true);
         orderType = type;
+        destination = where;
         if(type == OrderType.Build){
                 
             SoundManager.instance.Play("btn1");
             isAuto = false;
             goTo = true;    
             YesSound();
-            destination = GameObject.Find(where).transform;
+            //destination = GameObject.Find(where).transform;
         }        
         if(type == OrderType.Enter){
                 
@@ -1102,11 +1140,34 @@ public class PlayerManager : MonoBehaviour
             isAuto = false;
             goTo = true;    
             YesSound();
-            destination = GameObject.Find(where).transform;
+            //destination = GameObject.Find(where).transform;
         }
         else if(type == OrderType.Stop){
 
         }
+        else if(type == OrderType.Get){
+            
+            SoundManager.instance.Play("btn1");
+            isAuto = false;
+            goTo = true;    
+            YesSound();
+            //destination = GameObject.Find(where).transform;
+        }
+    }
+
+    public void GetItem(GameObject item){
+        //box.GetComponent<SpriteButton>().DestroySprite();
+        //Debug.Log("상자 삭제");
+Instantiate(effect, item.transform.position, Quaternion.identity);
+        SoundManager.instance.Play("rescue");
+        switch(item.GetComponent<SpriteButton>().objectName){
+            case "RP" :
+                curRP += 100;
+                break;
+        }
+        //boxCountText.text = "x "+(++boxCount).ToString();
+
+        Destroy(item);
     }
 
 }

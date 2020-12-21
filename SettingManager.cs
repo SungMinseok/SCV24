@@ -6,6 +6,8 @@ public class SettingManager : MonoBehaviour
 {
     public static SettingManager instance;
     public bool isPaused;
+
+    public Vector2 screenSize;
     private void Awake()
     {
         if(instance == null)
@@ -16,10 +18,14 @@ public class SettingManager : MonoBehaviour
         else{
             Destroy(this.gameObject);
         }
+
+        
+        screenSize = new Vector2(Screen.width,Screen.height);
     }
     void Start()
     {
         Screen.sleepTimeout=SleepTimeout.NeverSleep;
+        //Debug.Log(screenSize);
     }
 
     void OnApplicationQuit(){

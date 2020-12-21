@@ -27,38 +27,48 @@ public class Building{
 public class BuildingManager : MonoBehaviour
 {
     public static BuildingManager instance;
+    public bool[] unlockedNextBuilding = new bool[4];
+
+    [Header("요구 연구점수")]
+    public int[] rpRequirement;
     [Header("작성해야할 것")]
     public Building[] buildings;
+    public int[] order = new int[]{0,1,2};
     [Header("채워야할 것")]
     public GameObject[] buildingsInMap;
+    public float[] buildTimeCounter = new float[3];    //건물 상태 체크(건설전/건설중/건설완료). 건물 별 건설시간 받아서 그것보다 높으면 완성상태 , 아니면 건설중. 0 이면 없음.
+    public bool[] isConstructing = new bool[3];
     [Header("Build Panel UI")]
     public Transform buildScrollPanel;
-    public Transform[] buildingList;
+    public Transform[] childPanels;
     public GameObject buildingPanel;
     public GameObject buildPanel;
     public Text nameText;
     public Text desText;
     public Text buildTimeText;
     public Text priceText;
-    public float[] buildTimeCounter;    //건물 상태 체크(건설전/건설중/건설완료). 건물 별 건설시간 받아서 그것보다 높으면 완성상태 , 아니면 건설중. 0 이면 없음.
-    public bool[] isConstructing;
 
+    public Text priceNextUpgradeText;
+    public GameObject unlockCover;
     void Awake(){
 
         instance =this;
-        buildTimeCounter = new float[buildings.Length];
-        buildTimeCounter.Initialize();
-        isConstructing = new bool[buildings.Length];
-        isConstructing.Initialize();
+        // buildTimeCounter = new float[buildings.Length];
+        // buildTimeCounter.Initialize();
+        // isConstructing = new bool[buildings.Length];
+        // isConstructing.Initialize();
     }
     void Start(){
-        buildingList = buildScrollPanel.GetComponentsInChildren<Transform>();// 0 // 1,2,3,4,5 // 6,7,8,9,10 // 버튼,이름,이미지,잠금,건설완료
+        //buildingList = buildScrollPanel.GetComponentsInChildren<Transform>();// 0 // 1,2,3,4,5 // 6,7,8,9,10 // 버튼,이름,이미지,잠금,건설완료
         //Debug.Log(buildScrollPanel.transform.childCount); 건물 갯수.
+        childPanels = new Transform[buildScrollPanel.childCount];
         for(int i=0;i<buildScrollPanel.transform.childCount;i++){
+            childPanels[i] = buildScrollPanel.GetChild(i);
             //Debug.Log(i);
             int temp = i;
             buildScrollPanel.GetChild(temp).GetComponent<Button>().onClick.AddListener(()=>BuildPanelBtn(temp));
             //buildingList[temp].GetComponent<Button>().onClick.AddListener(()=>BuildPanelBtn(temp));
+            childPanels[temp].GetChild(2).GetComponent<Button>().onClick.AddListener(()=>OpenLockedBtn(temp));
         //     buildingList.Add(buildScrollPanel.get);
         }        
         // for(int i=1;i<buildScrollPanel.transform.childCount;i+=5){
@@ -72,26 +82,29 @@ public class BuildingManager : MonoBehaviour
         // buildingList[4].gameObject.SetActive(false);
         // buildingList[9].gameObject.SetActive(false);
         BuildingManager.instance.BuildingStateCheck();
+        ApplyUnlocked();
     }
-    void Update(){
-        if(DBManager.instance.loadComplete){
+    void LateUpdate(){
+        //if(DBManager.instance.loadComplete){
 
             if(ConstructingCheck()) BuildTimeCount();
-        }
+        //}
     }
     
     public int nowBuilding;
     //건설하기 누름
     public void BuildBtn(){        
         if(PlayerManager.instance.curMineral >= buildings[nowBuilding].price){
-
+            buildingPanel.SetActive(false);
+            buildPanel.SetActive(false);
             StartCoroutine(BuildingCoroutine(nowBuilding));//0번건물 정보 넘김. 건설시간 받아오기
             buildingPanel.SetActive(false);
             buildPanel.SetActive(false);
             //SoundManager.instance.Play("up");
         }
         else{
-            SoundManager.instance.Play("notenoughmin");
+            //SoundManager.instance.Play("notenoughmin");
+            UIManager.instance.SetPopUp("미네랄이 부족합니다.","notenoughmin");
         }
 
     }
@@ -103,10 +116,10 @@ public class BuildingManager : MonoBehaviour
     public void BuildPanelBtn(int num){
         nowBuilding = num;//인덱스
 
-        nameText.text = buildings[num].name;
-        desText.text = buildings[num].des;
-        buildTimeText.text = buildings[num].buildTime.ToString()+"초";
-        priceText.text = string.Format("{0:#,###0}", buildings[num].price);//buildings[num].price.ToString();
+        nameText.text = buildings[nowBuilding].name;
+        desText.text = buildings[nowBuilding].des;
+        buildTimeText.text = buildings[nowBuilding].buildTime.ToString()+"초";
+        priceText.text = string.Format("{0:#,###0}", buildings[nowBuilding].price);//buildings[num].price.ToString();
 
         buildPanel.SetActive(true);
     }
@@ -114,7 +127,7 @@ public class BuildingManager : MonoBehaviour
     IEnumerator BuildingCoroutine(int buildingNum){
         Debug.Log(buildingNum +"번 건설이동");
         PlayerManager.instance.canMove = false;
-        PlayerManager.instance.Order(buildingsInMap[buildingNum].name,OrderType.Build);
+        PlayerManager.instance.Order(buildingsInMap[buildingNum].transform,OrderType.Build);
         yield return new WaitUntil(()=>PlayerManager.instance.buildStart);
         PlayerManager.instance.buildStart = false;
             PlayerManager.instance.HandleMineral(-buildings[nowBuilding].price);
@@ -158,6 +171,10 @@ public class BuildingManager : MonoBehaviour
                     BuildingStateCheck(i);
                     buildingsInMap[i].transform.GetChild(0).gameObject.SetActive(false); 
                     buildingsInMap[i].transform.GetChild(1).gameObject.SetActive(true); 
+                    
+                    UIManager.instance.SetPopUp("건설이 완료되었습니다 : "+buildings[i].name);
+
+                    if(i==1) UIManager.instance.ActivateLowerUIPanel(1);
                 }
             }
         }
@@ -193,22 +210,39 @@ public class BuildingManager : MonoBehaviour
             for(int i=0;i<buildings.Length;i++){
                 if(buildTimeCounter[i] >= buildings[i].buildTime){  //건설 되있으면.
                     //Debug.Log(i+"번 건물 건설완료됨 ");
-                    buildingList[7*i+4].gameObject.SetActive(false);//잠금이미지 비활성화
-                    buildingList[7*i+6].gameObject.SetActive(true);//텍스트 활성화
+                    //buildingList[7*i+4].gameObject.SetActive(false);//잠금이미지 비활성화
+                    childPanels[i].GetChild(3).gameObject.SetActive(true);//텍스트 활성화
                     buildingsInMap[i].transform.GetChild(1).gameObject.SetActive(true);
+                    if(i==1) UIManager.instance.ActivateLowerUIPanel(1);
                 }
                 else{
                     //Debug.Log(i+"번 건물 미건설");
-                    buildingList[7*i+4].gameObject.SetActive(false);//잠금이미지 비활성화
-                    buildingList[7*i+6].gameObject.SetActive(false);//텍스트 활성화
+                    // if(i!=0 && buildingList[7*(i-1)+6].gameObject.activeSelf){//이전 건물 건설 되있으면
+                        
+                    //     buildingList[7*i+4].gameObject.SetActive(false);//잠금이미지 비활성화
+                    // }
+                    // else{
+                    //     buildingList[7*i+4].gameObject.SetActive(true);//잠금이미지 활성화
+
+                    // }
+                    // buildingList[7*0+4].gameObject.SetActive(false);//잠금이미지 비활성화
+
+                    childPanels[i].GetChild(3).gameObject.SetActive(false);//텍스트 활성화
                     buildingsInMap[i].transform.GetChild(1).gameObject.SetActive(false);
                 }
             }
         }     
         else{
+            // if(flag!=0 && buildingList[7*(flag-1)+6].gameObject.activeSelf){//이전 건물 건설 되있으면
+                
+            //     buildingList[7*flag+4].gameObject.SetActive(false);//잠금이미지 비활성화
+            // }
+            // else{
+            //     buildingList[7*flag+4].gameObject.SetActive(true);//잠금이미지 활성화
 
-            buildingList[7*flag+4].gameObject.SetActive(false);//잠금이미지 비활성화
-            buildingList[7*flag+6].gameObject.SetActive(true);//텍스트 활성화
+            // }
+            // buildingList[7*0+4].gameObject.SetActive(false);//잠금이미지 비활성화
+            childPanels[flag].GetChild(3).gameObject.SetActive(true);//텍스트 활성화
             buildingsInMap[flag].transform.GetChild(1).gameObject.SetActive(true);
         }   
     }
@@ -246,4 +280,38 @@ public class BuildingManager : MonoBehaviour
     //         }
     //     }
     // }
+
+    public void ApplyUnlocked(){
+        
+        for(int i=0;i<unlockedNextBuilding.Length;i++){
+            if(unlockedNextBuilding[i]){
+                childPanels[i].transform.GetChild(2).gameObject.SetActive(false);
+            }
+            else{
+                childPanels[i].transform.GetChild(2).gameObject.SetActive(true);
+            }
+        }
+        childPanels[0].transform.GetChild(2).gameObject.SetActive(false);
+        unlockedNextBuilding[0] = true;
+    }
+    public int nowNum;
+    public void OpenLockedBtn(int num){//잠겨있는 버튼 누름.
+        nowNum = num;
+        
+        priceNextUpgradeText.text = string.Format("{0:#,###0}", rpRequirement[nowNum]);//(num * (num-1) * pricePerUpgrade).ToString();
+        
+        if(childPanels[nowNum-1].transform.GetChild(3).gameObject.activeSelf  && PlayerManager.instance.curRP >= rpRequirement[nowNum]){
+            unlockCover.SetActive(false);
+        }
+        else{
+            unlockCover.SetActive(true);
+        }
+        
+    }
+    public void Unlock(){//잠금 해제 버튼 누름.
+
+        unlockedNextBuilding[nowNum] = true;
+        childPanels[nowNum].transform.GetChild(2).gameObject.SetActive(false);                
+        PlayerManager.instance.curRP -= rpRequirement[nowNum];
+    }
 }

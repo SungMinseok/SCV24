@@ -27,9 +27,9 @@ public class FactoryManager : MonoBehaviour
     public Text priceText;
     public Text populationText;
     public Text populationText_Status;
-    public int population;
+    //public int population;
 
-    public bool[] unlockedNextProduce;
+    public bool[] unlockedNextProduce = new bool[8];
     public GameObject unlockCover;
 
     [Header("장비 리스트")]
@@ -47,6 +47,7 @@ public class FactoryManager : MonoBehaviour
     }
     void Start()
     {
+        //if(unlockedNextProduce.Length ==0) unlockedNextProduce = new bool[8];
         
         nameText_Status.text = "";
         priceText_Status.text = "";
@@ -58,8 +59,9 @@ public class FactoryManager : MonoBehaviour
         for(int i=0;i<parentPanel.transform.childCount;i++){
             childPanels[i]=parentPanel.GetChild(i);
             int temp = i;
+            int temp1 = i;
             parentPanel.GetChild(temp).GetComponent<Button>().onClick.AddListener(()=>OpenProducePanel(temp));
-            childPanels[temp].GetChild(2).GetComponent<Button>().onClick.AddListener(()=>OpenLockedBtn(temp));
+            childPanels[temp1].GetChild(2).GetComponent<Button>().onClick.AddListener(()=>OpenLockedBtn(temp1));
         }   
         for(int i=0;i<botStatusScroll.childCount;i++){
             int temp = i;
@@ -76,6 +78,21 @@ public class FactoryManager : MonoBehaviour
         efficiencyText.text = "본체의 "+(BotManager.instance.botInfoList[num].efficiency*100).ToString()+"%"+"(<color=#C0F678>"+Mathf.RoundToInt(BotManager.instance.botInfoList[num].efficiency*PlayerManager.instance.capacity)+"</color>)";
         priceText.text = string.Format("{0:#,###0}", BotManager.instance.botInfoList[num].price);//BotManager.instance.botInfoList[num].price.ToString();
 
+    }
+    public void ProduceInTuto(){
+        var clone = Instantiate(robots[0],BuildingManager.instance.buildingsInMap[0].transform.position,Quaternion.identity);
+        clone.GetComponent<SpriteRenderer>().color = childPanels[0].GetChild(1).GetComponent<Image>().color;
+        clone.GetComponent<BotScript>().botState = BotState.Mine;
+        clone.GetComponent<BotScript>().efficiency = BotManager.instance.botInfoList[0].efficiency;
+        clone.transform.parent = botManager;
+        BotManager.instance.RefreshBotEquip(BotManager.instance.transform.childCount-1);
+
+
+        BotManager.instance.botSaved.Add(nowNum);
+        populationText.text = "인구수 : "+BotManager.instance.botSaved.Count.ToString()+"/"+BotManager.instance.maxPopulation;
+        
+        populationText_Status.text = BotManager.instance.botSaved.Count.ToString()+" / "+BotManager.instance.maxPopulation;
+        SoundManager.instance.Play("ready");
     }
 
     public void ProduceBtn(){
@@ -100,13 +117,23 @@ public class FactoryManager : MonoBehaviour
                 SoundManager.instance.Play("ready");
             } 
             else{
-                SoundManager.instance.Play("notenoughmin");
+                //SoundManager.instance.Play("notenoughmin");
+                UIManager.instance.SetPopUp("미네랄이 부족합니다.","notenoughmin");
             }
 
         }
         else{
             
-            Debug.Log("인구수 부족");
+            //Debug.Log("인구수 부족");
+            //SoundManager.instance.Play("error");
+            if(BotManager.instance.maxPopulation<BotManager.instance.populationLimit){
+                UIManager.instance.SetPopUp("보급품이 더 필요합니다. 보급고를 강화하세요.","error");
+
+            }
+            else{
+                
+                UIManager.instance.SetPopUp("보급품 최대치입니다.","error");
+            }
         }
 
     }    
@@ -158,7 +185,7 @@ public class FactoryManager : MonoBehaviour
     }
 
     public void ResetData(){
-        
+        unlockedNextProduce = new bool[8];
         for(int i=0;i<unlockedNextProduce.Length;i++){
             unlockedNextProduce[i] = false;
             childPanels[i].transform.GetChild(2).gameObject.SetActive(true);
@@ -270,4 +297,5 @@ public class FactoryManager : MonoBehaviour
 
         OpenBotStatusPanel();
     }
+
 }

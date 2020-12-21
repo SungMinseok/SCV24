@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class HelperManager : MonoBehaviour
 {
@@ -11,6 +12,9 @@ public class HelperManager : MonoBehaviour
     public GameObject[] helpers; //미네랄, 센터, 상단UI
     public GameObject[] arrows; //미네랄, 센터, 상단UI
     public GameObject finalDes;
+
+    public GameObject alertPop;
+    public Text alertText;
     void Awake(){
         instance = this;
     }
@@ -19,6 +23,13 @@ public class HelperManager : MonoBehaviour
     {
         SoundManager.instance.Play("ready");
         UIManager.instance.StartTimer();
+        if(PlayerManager.instance.helperDone){
+            bundle.SetActive(false);
+        }
+        else{
+            bundle.SetActive(true);
+            PlayerManager.instance.helperDone = true;
+        }
         //Invoke("PlayerManager.instance.GameStart",0.01f) ;
     }
     public void HelperOn(){
@@ -90,4 +101,16 @@ public class HelperManager : MonoBehaviour
 
         bundle.SetActive(false);
     }
+
+    public void SetPopUp(string _text){
+        alertText.text = "미네랄 부족";
+        alertPop.SetActive(false);
+        alertPop.SetActive(true);
+    }
+    public void FirstStart(){
+        QuestManager.instance.SetQuest(0);
+    }
+
+
+    
 }

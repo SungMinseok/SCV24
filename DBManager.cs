@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 public class DBManager : MonoBehaviour
 {    
     public static DBManager instance;
+    public bool ActivateLoad;
     public bool loadComplete;
     private void Awake()
     {
@@ -25,7 +26,7 @@ public class DBManager : MonoBehaviour
         
         
     [Header("기타 값 ( Save & Load )")]
-        public int helperDone;
+        public bool helperDone;
         public int curMineral;
         public int curRP;
         public float curFuel;
@@ -40,6 +41,7 @@ public class DBManager : MonoBehaviour
 
         //건설
         public float[] buildTimeCounter;
+        public bool[] unlockedNextBuilding = new bool[4];//건물 갯수
         
         //채취로봇
         public List<int> botSaved;
@@ -48,7 +50,12 @@ public class DBManager : MonoBehaviour
         public bool[] unlockedNextUpgrade = new bool[16];//업그레이드 패널 수 만큼, 0,1,2,3/4,5,6,7/8,9,10,11/12,13,14,15
 
         //팩토리
-        public bool[] unlockedNextProduce = new bool[8];//업그레이드 패널 수 만큼, 0,1,2,3/4,5,6,7/8,9,10,11/12,13,14,15
+        public bool[] unlockedNextProduce = new bool[8];//scv종류만큼
+        
+        //랜덤상자
+        public int boxCount;
+        //보급
+        public int maxPopulation = 5;
     }
     UIManager theUI;
     PlayerManager thePlayer;
@@ -82,7 +89,8 @@ public class DBManager : MonoBehaviour
 
     //건설
         data.buildTimeCounter = BuildingManager.instance.buildTimeCounter;
-
+        data.unlockedNextBuilding = BuildingManager.instance.unlockedNextBuilding;
+ 
     //채취로봇
         data.botSaved = BotManager.instance.botSaved;
 
@@ -90,6 +98,12 @@ public class DBManager : MonoBehaviour
         data.unlockedNextUpgrade = UpgradeManager.instance.unlockedNextUpgrade;
     //팩토리
         data.unlockedNextProduce = FactoryManager.instance.unlockedNextProduce;
+
+    //버프
+        data.boxCount =BuffManager.instance.boxCount;
+
+    //보급
+        data.maxPopulation = BotManager.instance.maxPopulation;
         
 
         BinaryFormatter bf = new BinaryFormatter();
@@ -113,7 +127,7 @@ public class DBManager : MonoBehaviour
                 theUI=FindObjectOfType<UIManager>();
                 thePlayer=FindObjectOfType<PlayerManager>();
 
-
+                //Debug.Log(Application.);
                 // Vector3 vector =new Vector3(data.playerX, data.playerY, data.playerZ);
                 // thePlayer.transform.position = vector;
 
@@ -135,6 +149,9 @@ public class DBManager : MonoBehaviour
                 //건설 // 배열은 널체크
                 
                 if(data.buildTimeCounter!=null) BuildingManager.instance.buildTimeCounter=data.buildTimeCounter ;
+                BuildingManager.instance.unlockedNextBuilding = data.unlockedNextBuilding ;
+
+                //채취로봇
                 BotManager.instance.botSaved = data.botSaved;
 
                 
@@ -143,6 +160,12 @@ public class DBManager : MonoBehaviour
 
                 //팩토리
                 if(data.unlockedNextProduce!=null) FactoryManager.instance.unlockedNextProduce = data.unlockedNextProduce;
+
+                //버프
+                BuffManager.instance.boxCount = data.boxCount;
+
+                //보급
+                BotManager.instance.maxPopulation = data.maxPopulation;
             }
 
 
@@ -152,7 +175,7 @@ public class DBManager : MonoBehaviour
 
     public void ResetDB(){
         PlayerManager.instance.curMineral = 1000000;
-        PlayerManager.instance.curRP = 10000;
+        PlayerManager.instance.curRP = 1000000;
         PlayerManager.instance.curFuel = PlayerManager.instance.defaultFuel;
         PlayerManager.instance.curSpeed = PlayerManager.instance. defaultSpeed;
         PlayerManager.instance.weldingLevel = 1;
@@ -184,6 +207,12 @@ public class DBManager : MonoBehaviour
 
         //팩토리
         FactoryManager.instance.ResetData();
+        
+        //버프
+        BuffManager.instance.boxCount = 10;
+
+        //보급
+        BotManager.instance.maxPopulation = 5;
     }
 
 

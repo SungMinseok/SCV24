@@ -32,7 +32,9 @@ public class UIManager : MonoBehaviour
     public Text statusInfoText;
     bool timerBtn;
     int second, minute, hour, day;
-
+    public GameObject alertPopup;
+    public Text alertPopupText;
+    public GameObject[] lowerUI;
     [Header("센터")]
     public GameObject centerUI;
     [Header("Bay")]
@@ -164,11 +166,14 @@ public class UIManager : MonoBehaviour
             UpdateTimer(totalTime );
         }
 
-        if(PlayerManager.instance.goTo || BuildingManager.instance.ConstructingCheck()){
-            buildLock.SetActive(true);
-        }
-        else{
-            buildLock.SetActive(false);
+        if(QuestManager.instance.questOverList.Contains(3)){
+
+            if(PlayerManager.instance.goTo || BuildingManager.instance.ConstructingCheck()){
+                buildLock.SetActive(true);
+            }
+            else{
+                buildLock.SetActive(false);
+            }
         }
     }
 
@@ -277,6 +282,29 @@ public class UIManager : MonoBehaviour
             }
         }
         return false;
+    }
+    public void SetPopUp(string _text, string _track = "transmission", float extraLength = 0){
+        StartCoroutine(PopupCoroutine(_text, _track, extraLength));
+    }
+    IEnumerator PopupCoroutine(string _text, string _track, float extraLength){
+        //alertPopup.GetComponent<Animator>().speed = 1f;
+        SoundManager.instance.Play(_track);
+        alertPopupText.text = _text;
+        alertPopup.SetActive(false);
+        alertPopup.SetActive(true);
+        // if(extraLength!=0){
+        //     alertPopup.GetComponent<Animator>().speed = 0f;
+        //     yield return new WaitForSeconds(extraLength);
+        //     alertPopup.GetComponent<Animator>().speed = 1f;
+
+        // }
+        // else{
+        //     yield return null;
+        // }
+        yield return null;
+    }
+    public void ActivateLowerUIPanel(int num){
+        lowerUI[num].transform.GetChild(2).gameObject.SetActive(false);
     }
 
 }
