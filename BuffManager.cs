@@ -5,13 +5,15 @@ using UnityEngine.UI;
 [System.Serializable]
 public class Buff{
     public string name;
-    public float time;
-
-    public Buff(string _name, float _time){
-        name = _name;
-        time = _time;
-    }
-
+    public float coolTime;
+    public float duration;
+    //public int count;//DB저장
+    public Transform btn;
+    public Transform buffImage;//상단UI표시
+    public float remainingCoolTime;
+    public float remainingDuration;
+    public int count;//DB저장
+    //public int remainingCount;
     
 }
 public class BuffManager : MonoBehaviour
@@ -19,8 +21,15 @@ public class BuffManager : MonoBehaviour
     public static BuffManager instance;
     public int boxCount;
     public Text boxCountText;
+    public Transform botManager;
+    [SerializeField]
     public List<Buff> buffs = new List<Buff>();
     // Start is called before the first frame update
+    //public List<float> coolTimeCounter = new List<float>();
+    //public List<float> durationTimeCounter = new List<float>();
+    // public float[] coolTimeCounter = new float[1];
+    // public float[] durationTimeCounter = new float[1];
+    // public int[] countCounter = new int[1];
     public Image centerBuffImg;
     public Text centerBuffText;
     public Button centerBuffBtn;
@@ -37,6 +46,12 @@ public class BuffManager : MonoBehaviour
     public GameObject dropbox;
     public BoxCollider2D mapBound;
     public float dropshipSpeed = 5f;
+    [Header("RP")]
+    public BoxCollider2D[] createArea;
+    public float rpCoolTime;
+    public int maxRP;
+    public GameObject rpBox;
+    public Transform rpParent;
     void Awake(){
         instance = this;
     }
@@ -44,6 +59,17 @@ public class BuffManager : MonoBehaviour
     {
         //CreateDropship();
         boxCountText.text = "x " + boxCount.ToString();
+
+        for(int i=0; i< buffs.Count;i++){
+            var temp = buffs[i].btn.GetChild(buffs[i].btn.childCount-1);
+            if(temp.gameObject.name == "LeftCount"){//카운트가 있는 경우(스팀팩)
+                temp.GetComponent<Text>().text = buffs[i].count.ToString();
+                    
+                    //buffs[i].btn.GetChild(buffs[i].btn.childCount-2).GetComponent<Text>().text
+            }
+        }
+
+        StartCoroutine(CreateRandomRPCoroutine());
     }
 
     // Update is called once per frame
@@ -54,37 +80,121 @@ public class BuffManager : MonoBehaviour
     public void ActivateBuff(string name){
         for(int i=0;i<buffs.Count;i++){
             if(buffs[i].name == name){
-                StartCoroutine(BuffCoroutine(buffs[i]));
+                //var temp = buffs[i].btn.GetChild(buffs[i].btn.childCount-1);
+                //if(temp.gameObject.name == "LeftCount"){//카운트가 있는 경우(스팀팩)
+                if(buffs[i].count > 0){
+
+                    buffs[i].btn.GetChild(buffs[i].btn.childCount-1).GetComponent<Text>().text = (--buffs[i].count).ToString();
+                    StartCoroutine(BuffCoolTimeCoroutine(buffs[i]));
+                    StartCoroutine(BuffCoroutine(buffs[i]));
+                }
+                else{
+
+                }
+                    
+                        //buffs[i].btn.GetChild(buffs[i].btn.childCount-2).GetComponent<Text>().text
+                // }
+                // else{
+
+                //     StartCoroutine(BuffCoolTimeCoroutine(buffs[i]));
+                // }
             }
         }
     }
 
-    IEnumerator BuffCoroutine(Buff buff){
-        centerBuffBtn.interactable = false;
-        centerBuffImg.gameObject.SetActive(true);
-        centerBuffText.text = buff.time.ToString();
-        float tempTime = buff.time;
+    IEnumerator BuffCoolTimeCoroutine(Buff buff){
+        buff.btn.GetComponent<Button>().interactable = false;
+        var coolTimeImage = buff.btn.GetChild(buff.btn.childCount-2).GetComponent<Image>();
+        var coolTimeText = buff.btn.GetChild(buff.btn.childCount-2).transform.GetChild(0).GetComponent<Text>();
+        //buff.btn.GetComponent<Button>().interactable = false;//centerBuffBtn.interactable = false;
+        coolTimeImage.gameObject.SetActive(true);//centerBuffImg.gameObject.SetActive(true);
+        coolTimeText.text = buff.coolTime.ToString();//centerBuffText.text = buff.time.ToString();
+        
+        
 
-
-        while(tempTime>0f){  
+        while(buff.remainingCoolTime>0f){  
             
             // buff.time--;
 
-            
+           // Debug.Log("TempTime : "+ tempTime);
             // centerBuffText.text = buff.time.ToString();
             // centerBuffImg.fillAmount = (float)buff.time / (float)full ;
             // Debug.Log(centerBuffImg.fillAmount);
             // yield return new WaitForSeconds(1f);
 
-            tempTime -= Time.deltaTime;
+            buff.remainingCoolTime -= Time.deltaTime;
             
-            centerBuffText.text = (Mathf.CeilToInt(tempTime)).ToString();
-            centerBuffImg.fillAmount = tempTime / buff.time ;
+            coolTimeText.text = (Mathf.CeilToInt(buff.remainingCoolTime)).ToString();//centerBuffText.text = (Mathf.CeilToInt(tempTime)).ToString();
+            coolTimeImage.fillAmount = buff.remainingCoolTime / buff.coolTime ;
             yield return new WaitForFixedUpdate();
         }
 
-        centerBuffBtn.interactable = true;
-        centerBuffImg.gameObject.SetActive(false);
+        //centerBuffBtn.interactable = true;
+        buff.btn.GetComponent<Button>().interactable = true;
+        coolTimeImage.gameObject.SetActive(false);//centerBuffImg.gameObject.SetActive(false);
+
+        buff.remainingCoolTime = buff.coolTime;
+    }    
+    IEnumerator BuffCoroutine(Buff buff){
+        buff.buffImage.gameObject.SetActive(true);
+        // buff.btn.GetComponent<Button>().interactable = false;
+        var coolTimeImage = buff.buffImage.GetChild(0).GetComponent<Image>();
+        // var coolTimeText = buff.btn.GetChild(buff.btn.childCount-2).transform.GetChild(0).GetComponent<Text>();
+        // //buff.btn.GetComponent<Button>().interactable = false;//centerBuffBtn.interactable = false;
+        // coolTimeImage.gameObject.SetActive(true);//centerBuffImg.gameObject.SetActive(true);
+        // coolTimeText.text = buff.coolTime.ToString();//centerBuffText.text = buff.time.ToString();
+        // float tempTime = buff.coolTime;
+        Debug.Log("버프코루틴 시작");
+        switch(buff.name){
+            case "Stimpack" : 
+                SetBoosterColor("red");
+                SetSCVSpeed(1.5f);
+                break;
+
+            default :
+                break;
+        }
+
+
+
+
+
+
+
+        
+        while(buff.remainingDuration>0f){  
+            
+            // buff.time--;
+
+            //Debug.Log("TempTime : "+ tempTime);
+            // centerBuffText.text = buff.time.ToString();
+            // centerBuffImg.fillAmount = (float)buff.time / (float)full ;
+            // Debug.Log(centerBuffImg.fillAmount);
+            // yield return new WaitForSeconds(1f);
+
+            buff.remainingDuration -= Time.deltaTime;
+            
+            //coolTimeText.text = (Mathf.CeilToInt(tempTime)).ToString();//centerBuffText.text = (Mathf.CeilToInt(tempTime)).ToString();
+            coolTimeImage.fillAmount = (buff.duration-buff.remainingDuration) / buff.duration ;
+            yield return new WaitForFixedUpdate();
+        }
+
+        //centerBuffBtn.interactable = true;
+        //buff.btn.GetComponent<Button>().interactable = true;
+        buff.buffImage.gameObject.SetActive(false);//centerBuffImg.gameObject.SetActive(false);
+
+        buff.remainingDuration = buff.duration;
+
+
+        switch(buff.name){
+            case "Stimpack" : 
+                SetBoosterColor();
+                SetSCVSpeed();
+                break;
+
+            default :
+                break;
+        }
 
 
     }
@@ -241,4 +351,103 @@ public class BuffManager : MonoBehaviour
         Destroy(box.transform.parent.gameObject);
     }
 
+    //버프 남은 시간 세이브/로드
+    public void CheckBuffState(){
+        UIManager.instance.ActivateLowerUIPanel(3);
+
+        for(int i=0;i<buffs.Count;i++){
+            if(buffs[i].remainingCoolTime!=buffs[i].coolTime){
+                StartCoroutine(BuffCoolTimeCoroutine(buffs[i]));
+            }
+            else{
+                buffs[i].btn.GetChild(buffs[i].btn.childCount-2).gameObject.SetActive(false);
+                //buffs[i].btn.GetChild(buffs[i].btn.childCount-2).GetComponent<Image>().fillAmount = 0;
+                //buffs[i].btn.GetChild(buffs[i].btn.childCount-2).transform.GetChild(0).GetComponent<Text>().text ;
+            }
+            if(buffs[i].remainingDuration!=buffs[i].duration){
+                StartCoroutine(BuffCoroutine(buffs[i]));
+            }
+            else{
+                
+                buffs[i].buffImage.gameObject.SetActive(false);
+            }
+        }
+    }
+    public void SetBoosterColor(string _color = "default"){
+        //if(buffs[i].remainingDuration!=buffs[i].duration){
+            Debug.Log("부스터 색 변경 > "+_color);
+        for(int i=0;i<PlayerManager.instance.boosters.Length;i++){
+            switch(_color){
+                case "red" : 
+            //Debug.Log("f");
+                    PlayerManager.instance.boosters[i].color = Color.red;
+                    break;
+                default :
+                    PlayerManager.instance.boosters[i].color = new Color(1,1,1,1);
+                    break;
+            }
+        }
+        
+        Color newColor = PlayerManager.instance.boosters[0].color;
+
+        if(BotManager.instance.botSaved.Count!=0){
+            for(int i=0;i<BotManager.instance.botSaved.Count;i++){
+                //Debug.Log(BotManager.instance.botSaved)
+                var temp = botManager.GetChild(i).GetComponent<BotScript>();
+                for(int j=0;j<3;j++){
+                    Debug.Log(i+"번 봇 "+j+"번 째 색변경 성공");
+                    //botManager.GetChild(i).GetComponent<BotScript>().booster.gameObject.SetActive(true);
+                    temp.boosters[j].color = newColor;
+                    //botManager.GetChild(i).GetComponent<BotScript>().booster.gameObject.SetActive(false);
+                    if(_color != "default"){
+
+                        temp.booster.gameObject.SetActive(true);
+                    }
+                    else{
+                        temp.booster.gameObject.SetActive(false);
+                        
+                    }
+                    
+                    // switch(_color){
+                    //     case "red" : 
+                    //         PlayerManager.instance.boosters[i].color = Color.red;
+                    //         break;
+                    //     default :
+                    //         PlayerManager.instance.boosters[i].color = new Color(1,1,1,1);
+                    //         break;
+                    // }
+                    
+                }
+                // switch(_color){
+                //     case "red" : 
+                //         PlayerManager.instance.boosters[i].color = Color.red;
+                //         break;
+                //     default :
+                //         PlayerManager.instance.boosters[i].color = new Color(1,1,1,1);
+                //         break;
+                // }
+            }
+        }
+    }
+    public void SetSCVSpeed(float amount = 1){
+        PlayerManager.instance.bonusSpeed = amount;
+    }
+
+    public IEnumerator CreateRandomRPCoroutine(){
+        yield return new WaitForSeconds(rpCoolTime);
+        //var temp = mapBound.bounds;
+        if(rpParent.childCount < maxRP){
+
+            var temp = createArea[Random.Range(0,createArea.Length)].bounds;
+            Vector3 ranPos =  new Vector3( Random.Range(temp.min.x, temp.max.x ),Random.Range(temp.min.y , temp.max.y ),0);
+        
+            var clone = Instantiate(rpBox, ranPos , Quaternion.identity);
+            clone.transform.SetParent(rpParent);
+            Debug.Log("RP랜덤생성");
+        }
+        
+
+        StartCoroutine(CreateRandomRPCoroutine());
+
+    }
 }

@@ -56,6 +56,14 @@ public class DBManager : MonoBehaviour
         public int boxCount;
         //보급
         public int maxPopulation = 5;
+        //퀘스트
+        //public int[] testArr;
+        public int nowPhase;
+        public List<int> questOverList;
+        //버프
+        public float[] remainingCoolTime;
+        public float[] remainingDuration;
+        public int[] count;
     }
     UIManager theUI;
     PlayerManager thePlayer;
@@ -99,12 +107,24 @@ public class DBManager : MonoBehaviour
     //팩토리
         data.unlockedNextProduce = FactoryManager.instance.unlockedNextProduce;
 
-    //버프
+    //랜덤상자
         data.boxCount =BuffManager.instance.boxCount;
+        
 
     //보급
         data.maxPopulation = BotManager.instance.maxPopulation;
         
+    //퀘스트
+        data.nowPhase = QuestManager.instance.nowPhase;
+        data.questOverList = QuestManager.instance.questOverList;
+
+    //버프
+
+        for(int i=0;i<BuffManager.instance.buffs.Count;i++){
+            data.remainingCoolTime[i] = BuffManager.instance.buffs[i].remainingCoolTime;
+            data.remainingDuration[i] = BuffManager.instance.buffs[i].remainingDuration;
+            data.count[i] = BuffManager.instance.buffs[i].count;
+        }
 
         BinaryFormatter bf = new BinaryFormatter();
         //FileStream file = File.Create(Application.persistentDataPath + "/SaveFile" + num +".dat");
@@ -161,11 +181,29 @@ public class DBManager : MonoBehaviour
                 //팩토리
                 if(data.unlockedNextProduce!=null) FactoryManager.instance.unlockedNextProduce = data.unlockedNextProduce;
 
-                //버프
+                //랜덤상자
                 BuffManager.instance.boxCount = data.boxCount;
 
                 //보급
                 BotManager.instance.maxPopulation = data.maxPopulation;
+
+                //퀘스트 //배열 : data는 초기화 하지말고 여기서 널체크 후 배열 길이 만들어주기.
+                QuestManager.instance.nowPhase = data.nowPhase;
+                if(data.questOverList!=null) QuestManager.instance.questOverList = data.questOverList;
+
+                //버프
+                if(data.remainingCoolTime != null){
+                    for(int i=0;i<BuffManager.instance.buffs.Count;i++){
+                        BuffManager.instance.buffs[i].remainingCoolTime = data.remainingCoolTime[i];
+                        BuffManager.instance.buffs[i].remainingDuration = data.remainingDuration[i];
+                        BuffManager.instance.buffs[i].count = data.count[i];
+                    }
+                }
+                else{
+                    data.remainingCoolTime = new float[BuffManager.instance.buffs.Count];
+                    data.remainingDuration = new float[BuffManager.instance.buffs.Count];
+                    data.count = new int[BuffManager.instance.buffs.Count];
+                }
             }
 
 
@@ -174,6 +212,8 @@ public class DBManager : MonoBehaviour
     }
 
     public void ResetDB(){
+        SettingManager.instance.testMode = true;
+        
         PlayerManager.instance.curMineral = 1000000;
         PlayerManager.instance.curRP = 1000000;
         PlayerManager.instance.curFuel = PlayerManager.instance.defaultFuel;

@@ -23,7 +23,7 @@ public class BotManager : MonoBehaviour
     public List<int> botSaved;
     public int maxPopulation = 5;
     public int populationLimit = 50;
-    public int[] prices= new int[9];
+    public int[] addPopulationPrices= new int[9];
 
     [Header("보급고 UI")]
     public Text populationText;
@@ -72,15 +72,23 @@ public class BotManager : MonoBehaviour
     public void LoadBot(){
         
         Debug.Log(botSaved.Count);
-        if(botSaved != null){
+        //if(botSaved != null){
             StartCoroutine(LoadBotCoroutine());
-        }
+        //}
     }
     IEnumerator LoadBotCoroutine(){
-        for(int i=0; i<botSaved.Count; i++){
-            FactoryManager.instance.nowNum = botSaved[i];
-            FactoryManager.instance.ProduceByLoad();
-            yield return new WaitForSeconds(0.1f);
+        if(botSaved != null){
+            for(int i=0; i<botSaved.Count; i++){
+                FactoryManager.instance.nowNum = botSaved[i];
+                FactoryManager.instance.ProduceByLoad();
+                yield return new WaitForSeconds(0.1f);
+            }
+            
+            BuffManager.instance. CheckBuffState();
+        }
+        else{
+
+            BuffManager.instance. CheckBuffState();
         }
     }
 
@@ -106,7 +114,7 @@ public class BotManager : MonoBehaviour
         if(maxPopulation<populationLimit){
             //Debug.Log(maxPopulation/5 -1);
             //Debug.Log("5/5 " +5/5);
-            priceText.text = prices[(maxPopulation/5-1) ].ToString();
+            priceText.text = addPopulationPrices[(maxPopulation/5-1) ].ToString();
             populationText.text = maxPopulation.ToString() + " >> " + (maxPopulation + 5).ToString();
             AddBtn.SetActive(true);
 
@@ -119,10 +127,10 @@ public class BotManager : MonoBehaviour
 
     }
     public void AddPopulation(){
-        if(PlayerManager.instance.curMineral >= prices[(maxPopulation/5-1) ]){
+        if(PlayerManager.instance.curMineral >= addPopulationPrices[(maxPopulation/5-1) ]){
             //depotPanel.SetActive(false);
             SoundManager.instance.Play("up");
-            PlayerManager.instance.HandleMineral(-prices[(maxPopulation/5-1) ]);
+            PlayerManager.instance.HandleMineral(-addPopulationPrices[(maxPopulation/5-1) ]);
             maxPopulation += 5;
             
             FactoryManager.instance.populationText.text = "인구수 : "+botSaved.Count.ToString()+"/"+maxPopulation;

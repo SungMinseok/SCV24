@@ -32,6 +32,20 @@ public class PlayerManager : MonoBehaviour
             DBManager.instance.CallLoad(0);
         DBManager.instance.loadComplete = true;
         }
+
+
+        if(shadowType==ShadowType.booster){
+            
+            booster = transform.GetChild(0).gameObject;
+            booster.SetActive(false);
+            boosters = new SpriteRenderer[3];
+            for(int i=0;i<3;i++){
+                //Debug.Log(booster.transform.childCount);
+                //Debug.Log(booster.transform.GetChild(i).name);
+                boosters[i] = booster.transform.GetChild(i).GetComponent<SpriteRenderer>();
+            }
+            defaultSide = boosters[1].GetComponent<RectTransform>().localPosition;
+        }
     }
     [SerializeField] public UnitType type;
     [SerializeField] public ShadowType shadowType;
@@ -60,6 +74,7 @@ public class PlayerManager : MonoBehaviour
     public float curFuel;
     [Header("기타 값")]
     public float curSpeed;
+    public float bonusSpeed = 1;
     
     [Header("장비 초기값 ( Fixed )")]
     public float fuelUsagePerWalk = 1f;
@@ -89,7 +104,7 @@ public class PlayerManager : MonoBehaviour
     Animator animatorChild;
     GameObject booster;
     RaycastHit2D hitTemp;
-    private SpriteRenderer[] boosters;
+    public SpriteRenderer[] boosters;
      [SerializeField]private Vector2 defaultSide;
         [HideInInspector]public Vector2 movement;
         [HideInInspector]public Vector2 movementDirection;
@@ -153,18 +168,7 @@ public class PlayerManager : MonoBehaviour
             //getco
         }
         
-        if(shadowType==ShadowType.booster){
-            
-            booster = transform.Find("Booster").gameObject;
-            booster.SetActive(false);
-            boosters = new SpriteRenderer[3];
-            for(int i=0;i<3;i++){
-                //Debug.Log(booster.transform.childCount);
-                //Debug.Log(booster.transform.GetChild(i).name);
-                boosters[i] = booster.transform.GetChild(i).GetComponent<SpriteRenderer>();
-            }
-            defaultSide = boosters[1].GetComponent<RectTransform>().localPosition;
-        }
+
         
         animator = GetComponent<Animator>();
         sr = GetComponent<SpriteRenderer>();
@@ -424,9 +428,9 @@ public class PlayerManager : MonoBehaviour
                         }
                         sr.flipX = false;
                         SetBooster("UPDOWN");
-                        rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
-                        HandleFuel(-fuelUsagePerWalk);
+                        // rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                        // animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                        // HandleFuel(-fuelUsagePerWalk);
                         
                     }
                     else if(Mathf.Abs(transform.position.x - destination.position.x)>=0.1f){
@@ -442,9 +446,9 @@ public class PlayerManager : MonoBehaviour
                         }
                         sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
                         SetBooster("LEFTRIGHT"); 
-                        rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
-                        HandleFuel(-fuelUsagePerWalk);
+                        // rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                        // animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                        // HandleFuel(-fuelUsagePerWalk);
                     }
                 }
                 else if(isMining){
@@ -492,9 +496,9 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
                         }
                         sr.flipX = false;
                         SetBooster("UPDOWN");
-                        rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
-                        HandleFuel(-fuelUsagePerWalk);
+                        // rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                        // animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                        // HandleFuel(-fuelUsagePerWalk);
                         
                     }
                     else if(Mathf.Abs(transform.position.x - destination.position.x)>=0.1f){
@@ -507,10 +511,16 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
                         }
                         sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
                         SetBooster("LEFTRIGHT"); 
-                        rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
-                        animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
-                        HandleFuel(-fuelUsagePerWalk);
+                        // rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                        // animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                        // HandleFuel(-fuelUsagePerWalk);
                     }
+                }
+                if(!isMining){
+
+                    rb.MovePosition(rb.position + movement * (curSpeed * bonusSpeed) * Time.fixedDeltaTime);
+                    animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                    HandleFuel(-fuelUsagePerWalk);
                 }
             }
             if(goTo){
@@ -572,9 +582,9 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
                     }
                     sr.flipX = false;
                     SetBooster("UPDOWN");
-                    rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
-                    animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
-                    HandleFuel(-fuelUsagePerWalk);
+                    // rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                    // animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                    // HandleFuel(-fuelUsagePerWalk);
                     
                 }
                 else if(destination!=null && Mathf.Abs(transform.position.x - destination.position.x)>=0.1f){
@@ -592,11 +602,14 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
                     }
                     sr.flipX = animator.GetFloat("Horizontal") < 0 ? true : false;
                     SetBooster("LEFTRIGHT"); 
-                    rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
-                    animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
-                    HandleFuel(-fuelUsagePerWalk);
+                    // rb.MovePosition(rb.position + movement * curSpeed * Time.fixedDeltaTime);
+                    // animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                    // HandleFuel(-fuelUsagePerWalk);
                 }
-                
+                    
+                rb.MovePosition(rb.position + movement * (curSpeed * bonusSpeed) * Time.fixedDeltaTime);
+                animator.SetFloat("Speed", curSpeed / defaultSpeed / 2);
+                HandleFuel(-fuelUsagePerWalk);
             }
         }
 #endregion
@@ -649,7 +662,8 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
 #endregion
 
         if (shadowType == ShadowType.booster){
-            if(animator.GetFloat("Speed")!=0 && !animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Att")){
+            //if(animator.GetFloat("Speed")!=0 && !animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Att")){
+            if(isAuto || goTo){
                 booster.SetActive(true);
             }
             else{
@@ -671,7 +685,13 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
     void FixedUpdate(){
         //rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
         //movement = new Vector2(animator.GetFloat("Horizontal"),animator.GetFloat("Vertical"));
+        // if(movement != Vector2.zero && !isMining){
+        //     if(PlayerManager.instance.curFuel>0){
+        //         rb.MovePosition(rb.position + movement * (curSpeed * bonusSpeed) * Time.fixedDeltaTime);
+        //         PlayerManager.instance.HandleFuel(-fuelUsagePerWalk);
 
+        //     }
+        // }
         
         movementDirection = new Vector2(movement.x, movement.y);
         if (movementDirection != Vector2.zero){
@@ -886,7 +906,7 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
             
             else if(destination != null){
                     
-                if(collision.name == destination.name){
+                if(collision.gameObject == destination.gameObject){
                     //if(isHolding){
                         gotDestination = true;
                         enterableBuilding = collision.name;
@@ -958,6 +978,7 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
         StopAllCoroutines();
         animator.SetBool("Stop", false);
         animator.SetFloat("Speed", 0f);
+        movement = Vector2.zero;
         miningFlag = false;
         destination=null;
         workLight.SetActive(false);

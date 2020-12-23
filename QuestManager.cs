@@ -19,13 +19,15 @@ public class QuestManager : MonoBehaviour
     public QuestInfo[] questList;//순서대로 저장용
     [Header("퀘스트 순서")]
     public int[] questOrder;
+    [Header("퀘스트용 오브젝트")]
+    public GameObject rp;
     [Header("퀘스트 UI")]
     public GameObject questPanel;
     public Text questText;
     [Header("DB 저장")]
     public int nowPhase;
     public List<int> questOverList = new List<int>();
-
+    //public int[] testArr = new int[10];
     void Awake(){
         instance = this;
         //questList_GET = new QuestInfo[questOrder.Length];
@@ -49,6 +51,17 @@ public class QuestManager : MonoBehaviour
         StopAllCoroutines();
         UIManager.instance.alertPopup.SetActive(false);
         questPanel.SetActive(false);
+        for(int i=0; i<questList.Length;i++){
+            if(questList[i].questArrow !=null){
+                questList[i].questArrow.SetActive(false);
+            }
+        }
+        for(int i=0;i<10;i++){
+            if(!questOverList.Contains(i)){
+
+            questOverList.Add(i);
+            }
+        }
     }
     public void SetQuest(int phase){
         StartCoroutine(QuestCoroutine(phase));
@@ -83,7 +96,16 @@ public class QuestManager : MonoBehaviour
                 yield return new WaitUntil(()=> PlayerManager.instance.orderType == OrderType.Build );
                 break;
             case 6 :
-
+                yield return new WaitUntil(()=> PlayerManager.instance.orderType == OrderType.Get);
+                break;            
+            case 7 :
+                //yield return new WaitUntil(()=> BuildingManager.instance.unlockedNextBuilding[1]);
+                yield return new WaitUntil(()=> BuildingManager.instance.buildingPanel.activeSelf);
+                break;
+            case 9 :
+                //yield return new WaitUntil(()=> BuildingManager.instance.unlockedNextBuilding[1]);
+                yield return new WaitUntil(()=> BotManager.instance.botSaved.Count >= 2);
+                break;
             // case 6 : //
             //     yield return new WaitUntil(()=> PlayerManager.instance.curMineral >=24);
             //     break;
@@ -122,6 +144,21 @@ public class QuestManager : MonoBehaviour
                 yield return new WaitUntil(()=> BuildingManager.instance.buildingsInMap[0].transform.GetChild(1).gameObject.activeSelf);
                 //yield return new WaitUntil(()=> BuildingManager.instance.isConstructing[0]);
                 break;            
+            case 6 : 
+                rp.SetActive(true);
+                yield return new WaitUntil(()=> PlayerManager.instance.curRP >=100 );
+                break;//SetActive(true);            
+            case 7 :
+                yield return new WaitUntil(()=> BuildingManager.instance.unlockedNextBuilding[1]);
+                break;
+            case 8 :
+                yield return new WaitUntil(()=> BuildingManager.instance.buildingsInMap[1].transform.GetChild(1).gameObject.activeSelf);
+                //yield return new WaitUntil(()=> BuildingManager.instance.isConstructing[0]);
+                break;            
+
+            case 9 : 
+                yield return new WaitUntil(()=> !UIManager.instance.OnUI() );//센터나감
+                break;
             // case 6 : //보급고 w중
             //     yield return new WaitUntil(()=> PlayerManager.instance.curMineral >=200 );
             //     //yield return new WaitUntil(()=> BuildingManager.instance.isConstructing[0]);
@@ -142,6 +179,7 @@ public class QuestManager : MonoBehaviour
                 SetQuest(1);
                 break;
             case 1 : 
+                PlayerManager.instance.curFuel = 0; 
                 SetQuest(2);
                 break;
             case 2 : 
@@ -162,9 +200,22 @@ public class QuestManager : MonoBehaviour
                 SetQuest(6);
                 break;
                 
-            // case 6 : 
-            //     SetQuest(7);
-            //     break;
+            case 6 : 
+                SetQuest(7);
+                break;
+            case 7: 
+                SetQuest(8);
+                break;
+            case 8 :
+                SetQuest(9);
+                break;            
+            case 9 :
+                UIManager.instance.alertPopup.GetComponent<Animator>().speed = 0f;
+                UIManager.instance.SetPopUp("이제 기본 튜토리얼을 마칩니다. 10억 미네랄을 모아 승리하세요!");
+
+                yield return new WaitForSeconds(5f);
+                UIManager.instance.alertPopup.GetComponent<Animator>().speed = 1f;
+                break;
             default : 
                 
                 SoundManager.instance.Play("rescue");

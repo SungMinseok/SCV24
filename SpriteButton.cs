@@ -8,6 +8,7 @@ public enum BuildingType{
     Resource,
     Drop,
     Item,
+    UI,
 }
 [RequireComponent (typeof (BoxCollider2D))]
 public class SpriteButton : MonoBehaviour
@@ -21,13 +22,14 @@ public class SpriteButton : MonoBehaviour
         if(objectName == "" )objectName = gameObject.name;
     }
     void OnMouseEnter(){
-        transform.localScale = new Vector2(defaultScale.x * 1.1f,defaultScale.y * 1.1f);
+        Debug.Log("들옴");
+        //transform.localScale = new Vector2(defaultScale.x * 1.1f,defaultScale.y * 1.1f);
     }
-    void OnMouseExit(){
+    // void OnMouseExit(){
         
-        transform.localScale = defaultScale;
-    }
-    void OnMouseUpAsButton(){
+    //     transform.localScale = defaultScale;
+    // }
+    void OnMouseUp(){
         //if(!CameraMovement.instance.isMoving){
         if(!UIManager.instance.OnUI()){
 
@@ -45,6 +47,14 @@ public class SpriteButton : MonoBehaviour
                 // Debug.Log(transform.position);
                 // Debug.Log(PlayerManager.instance. transform.position);
                 PlayerManager.instance.Order(transform,OrderType.Get);
+                
+            }
+            else if(buildingType == BuildingType.UI ){
+                Debug.Log("UI");
+                //PlayerManager.instance.destination = this.transform;
+                // Debug.Log(transform.position);
+                // Debug.Log(PlayerManager.instance. transform.position);
+                //PlayerManager.instance.Order(transform,OrderType.Get);
                 
             }
         }

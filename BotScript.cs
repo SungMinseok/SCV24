@@ -35,23 +35,16 @@ public class BotScript : MonoBehaviour
     ////////////////////
     public GameObject workLight;
     public GameObject mineral;
-    GameObject booster;
-    private SpriteRenderer[] boosters;
+    public GameObject booster;
+    public SpriteRenderer[] boosters;
     bool miningFlag;
     public GameObject floatingText;
     public GameObject floatingCanvas;
     public GameObject miningMineral;
-    void Start()
-    {
-        
-        rb = GetComponent<Rigidbody2D>();
-        animator = GetComponent<Animator>();
-        sr = GetComponent<SpriteRenderer>();   
-        floatingCanvas = PlayerManager.instance.floatingCanvas;     
-        
+    void Awake(){
         if(shadowType==ShadowType.booster){
             
-            booster = transform.Find("Booster").gameObject;
+            booster = transform.GetChild(0).gameObject;
             booster.SetActive(false);
             boosters = new SpriteRenderer[3];
             for(int i=0;i<3;i++){
@@ -61,6 +54,16 @@ public class BotScript : MonoBehaviour
             }
             defaultSide = boosters[1].GetComponent<RectTransform>().localPosition;
         }
+    }
+    void Start()
+    {
+        
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        sr = GetComponent<SpriteRenderer>();   
+        floatingCanvas = PlayerManager.instance.floatingCanvas;     
+        
+
     }
 
     // Update is called once per frame
@@ -170,7 +173,7 @@ public class BotScript : MonoBehaviour
         //movement = new Vector2(animator.GetFloat("Horizontal"),animator.GetFloat("Vertical"));
         if(movement != Vector2.zero && !isMining){
             if(PlayerManager.instance.curFuel>0){
-                rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+                rb.MovePosition(rb.position + movement * (speed * PlayerManager.instance.bonusSpeed) * Time.fixedDeltaTime);
                 PlayerManager.instance.HandleFuel(-fuelUsagePerWalk);
 
             }
@@ -181,14 +184,14 @@ public class BotScript : MonoBehaviour
             animator.SetFloat("Horizontal", movementDirection.x);
             animator.SetFloat("Vertical", movementDirection.y);
         }
-        if (shadowType == ShadowType.booster){
-            if(animator.GetFloat("Speed")!=0 && !animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Att")){
-                booster.SetActive(true);
-            }
-            else{
-                booster.SetActive(false);
-            }
-        }
+        // if (shadowType == ShadowType.booster){
+        //     if(animator.GetFloat("Speed")!=0 && !animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Att")){
+        //         booster.SetActive(true);
+        //     }
+        //     else{
+        //         booster.SetActive(false);
+        //     }
+        // }
     }
 
 
