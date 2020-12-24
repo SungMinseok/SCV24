@@ -166,7 +166,7 @@ public class UIManager : MonoBehaviour
             UpdateTimer(totalTime );
         }
 
-        if(QuestManager.instance.questOverList.Contains(3) || SettingManager.instance.testMode){
+        //if(QuestManager.instance.questOverList.Contains(3) || SettingManager.instance.testMode){
 
             if(PlayerManager.instance.goTo || BuildingManager.instance.ConstructingCheck()){
                 buildLock.SetActive(true);
@@ -174,7 +174,7 @@ public class UIManager : MonoBehaviour
             else{
                 buildLock.SetActive(false);
             }
-        }
+        //}
     }
 
 

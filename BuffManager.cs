@@ -52,6 +52,10 @@ public class BuffManager : MonoBehaviour
     public int maxRP;
     public GameObject rpBox;
     public Transform rpParent;
+    
+    [Header("오토모드")]
+    public bool autoChargeFuel;
+    private bool autoCharging;
     void Awake(){
         instance = this;
     }
@@ -146,9 +150,12 @@ public class BuffManager : MonoBehaviour
         // float tempTime = buff.coolTime;
         Debug.Log("버프코루틴 시작");
         switch(buff.name){
-            case "Stimpack" : 
+            case "Stimpack0" : 
                 SetBoosterColor("red");
                 SetSCVSpeed(1.5f);
+                break;
+            case "Stimpack1" : 
+                SetMineralSize(1.5f);
                 break;
 
             default :
@@ -187,9 +194,12 @@ public class BuffManager : MonoBehaviour
 
 
         switch(buff.name){
-            case "Stimpack" : 
+            case "Stimpack0" : 
                 SetBoosterColor();
                 SetSCVSpeed();
+                break;
+            case "Stimpack1" : 
+                SetMineralSize();
                 break;
 
             default :
@@ -198,6 +208,40 @@ public class BuffManager : MonoBehaviour
 
 
     }
+    // IEnumerator NewBuffCoroutine(Buff buff){ // 버프 중첩용.
+    //     buff.buffImage.gameObject.SetActive(true);
+    //     var coolTimeImage = buff.buffImage.GetChild(0).GetComponent<Image>();
+    //     Debug.Log("버프코루틴 시작");
+    //     switch(buff.name){
+    //         case "Stimpack" : 
+    //             SetBoosterColor("red");
+    //             SetSCVSpeed(1.5f);
+    //             break;
+    //         default :
+    //             break;
+    //     }
+    //     while(buff.remainingDuration>0f){  
+    //         buff.remainingDuration -= Time.deltaTime;
+    //         coolTimeImage.fillAmount = (buff.duration-buff.remainingDuration) / buff.duration ;
+    //         yield return new WaitForFixedUpdate();
+    //     }
+    //     buff.buffImage.gameObject.SetActive(false);
+
+    //     buff.remainingDuration = buff.duration;
+
+
+    //     switch(buff.name){
+    //         case "Stimpack" : 
+    //             SetBoosterColor();
+    //             SetSCVSpeed();
+    //             break;
+
+    //         default :
+    //             break;
+    //     }
+
+
+    // }
     int ranType;
     int ranNum;
     public void SetDailyRandomBox(){    // 일일 랜덤상자 클릭
@@ -354,6 +398,7 @@ public class BuffManager : MonoBehaviour
     //버프 남은 시간 세이브/로드
     public void CheckBuffState(){
         UIManager.instance.ActivateLowerUIPanel(3);
+        UIManager.instance.ActivateLowerUIPanel(4);
 
         for(int i=0;i<buffs.Count;i++){
             if(buffs[i].remainingCoolTime!=buffs[i].coolTime){
@@ -449,5 +494,35 @@ public class BuffManager : MonoBehaviour
 
         StartCoroutine(CreateRandomRPCoroutine());
 
+    }    
+    public void SetMineralSize(float amount = 1){
+        PlayerManager.instance.mineral.transform.localScale = new Vector2(amount,amount);
+        PlayerManager.instance.bonusCapacity = amount;
+        if(BotManager.instance.botSaved.Count!=0){
+            for(int i=0;i<BotManager.instance.botSaved.Count;i++){
+                var temp = botManager.GetChild(i).GetComponent<BotScript>();
+                for(int j=0;j<3;j++){
+                    temp.mineral.transform.localScale =  new Vector2(amount,amount);
+                }
+            }
+        }
+    }
+
+    public void AutoChargeFuel(){
+        if(!autoCharging){
+            autoCharging = true;
+            StartCoroutine(AutoChargeFuelCoroutine());
+        }
+    }
+
+    IEnumerator AutoChargeFuelCoroutine(){
+        Debug.Log("오토차징");
+        while(PlayerManager.instance.curFuel/PlayerManager.instance.maxFuel < 0.99f){
+
+            PlayerManager.instance.HandleFuel(PlayerManager.instance.maxFuel * 0.075f);
+
+            yield return new WaitForFixedUpdate();
+        }
+        autoCharging = false;
     }
 }

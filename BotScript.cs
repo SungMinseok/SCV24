@@ -295,24 +295,25 @@ public class BotScript : MonoBehaviour
         }
     }
 
-    public void HandleMineral(int amount = 0,bool floating = true){
+    public void HandleMineral(float amount = 0,bool floating = true){
         //int temp0 = curMineral;
         //int preMineral = curMineral;
         if(amount==0){
+            float temp = Mathf.Ceil(capacity * PlayerManager.instance. bonusCapacity);
                 
             switch(packageType){
                 case PackageType.normal :
-                    PlayerManager.instance.curMineral += capacity;
+                    PlayerManager.instance.curMineral += temp;
                     break;
                 default :
                     break;
             }
+            if(floating) PrintFloating("+ "+temp.ToString());
         }
         else{
             PlayerManager.instance.curMineral += amount;
         }
 
-        if(floating) PrintFloating("+ "+capacity.ToString());
 
     }    
     public void PrintFloating(string text, Sprite sprite = null)

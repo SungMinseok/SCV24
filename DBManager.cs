@@ -27,7 +27,7 @@ public class DBManager : MonoBehaviour
         
     [Header("기타 값 ( Save & Load )")]
         public bool helperDone;
-        public int curMineral;
+        public float curMineral;
         public int curRP;
         public float curFuel;
 
@@ -41,16 +41,16 @@ public class DBManager : MonoBehaviour
 
         //건설
         public float[] buildTimeCounter;
-        public bool[] unlockedNextBuilding = new bool[4];//건물 갯수
+        public bool[] unlockedNextBuilding;//건물 갯수
         
         //채취로봇
         public List<int> botSaved;
 
         //업그레이드
-        public bool[] unlockedNextUpgrade = new bool[16];//업그레이드 패널 수 만큼, 0,1,2,3/4,5,6,7/8,9,10,11/12,13,14,15
+        public bool[] unlockedNextUpgrade;//업그레이드 패널 수 만큼, 0,1,2,3/4,5,6,7/8,9,10,11/12,13,14,15
 
         //팩토리
-        public bool[] unlockedNextProduce = new bool[8];//scv종류만큼
+        public bool[] unlockedNextProduce;//scv종류만큼
         
         //랜덤상자
         public int boxCount;
@@ -167,10 +167,39 @@ public class DBManager : MonoBehaviour
                 thePlayer.weightLevel =data.weightLevel;
 
                 //건설 // 배열은 널체크
-                
-                if(data.buildTimeCounter!=null) BuildingManager.instance.buildTimeCounter=data.buildTimeCounter ;
-                BuildingManager.instance.unlockedNextBuilding = data.unlockedNextBuilding ;
+                if(data.buildTimeCounter==null){//아예처음생성시 게임 내 데이터 배열 길이 맞춰줌.
+               // Debug.Log("아예처음생성시 게임 내 데이터 배열 길이 맞춰줌.");
+                    data.buildTimeCounter = new float[BuildingManager.instance.buildTimeCounter.Length];
+                }
+                else if(data.buildTimeCounter.Length!=BuildingManager.instance.buildTimeCounter.Length){//게임내 배열 길이 증가한 경우 저장된값들까지만 로드
+                //Debug.Log("게임내 배열 길이 증가한 경우 저장된값들까지만 로드");
+                    
+                    for(int i=0;i<data.buildTimeCounter.Length;i++){
+                        BuildingManager.instance.buildTimeCounter[i] = data.buildTimeCounter[i];
+                    }
+                    data.buildTimeCounter = new float[BuildingManager.instance.buildTimeCounter.Length];
 
+                }
+                else{
+                //Debug.Log("그대로 로드");
+                    BuildingManager.instance.buildTimeCounter = data.buildTimeCounter;
+                }
+
+                //BuildingManager.instance.unlockedNextBuilding = data.unlockedNextBuilding ;
+                if(data.unlockedNextBuilding==null){//아예처음생성시 게임 내 데이터 배열 길이 맞춰줌.
+                    data.unlockedNextBuilding = new bool[BuildingManager.instance.unlockedNextBuilding.Length];
+                }
+                else if(data.unlockedNextBuilding.Length!=BuildingManager.instance.unlockedNextBuilding.Length){//게임내 배열 길이 증가한 경우 저장된값들까지만 로드
+                    for(int i=0;i<data.unlockedNextBuilding.Length;i++){
+                        BuildingManager.instance.unlockedNextBuilding[i] = data.unlockedNextBuilding[i];
+                    }
+                    data.unlockedNextBuilding = new bool[BuildingManager.instance.unlockedNextBuilding.Length];
+
+                }
+                else{                        
+                    BuildingManager.instance.unlockedNextBuilding= data.unlockedNextBuilding;
+
+                }
                 //채취로봇
                 BotManager.instance.botSaved = data.botSaved;
 
@@ -192,17 +221,39 @@ public class DBManager : MonoBehaviour
                 if(data.questOverList!=null) QuestManager.instance.questOverList = data.questOverList;
 
                 //버프
-                if(data.remainingCoolTime != null){
+                // if(data.remainingCoolTime.Length == BuffManager.instance.buffs.Count){
+                //     for(int i=0;i<BuffManager.instance.buffs.Count;i++){
+                //         BuffManager.instance.buffs[i].remainingCoolTime = data.remainingCoolTime[i];
+                //         BuffManager.instance.buffs[i].remainingDuration = data.remainingDuration[i];
+                //         BuffManager.instance.buffs[i].count = data.count[i];
+                //     }
+                // }
+                // else{
+                //     data.remainingCoolTime = new float[BuffManager.instance.buffs.Count];
+                //     data.remainingDuration = new float[BuffManager.instance.buffs.Count];
+                //     data.count = new int[BuffManager.instance.buffs.Count];
+                // }
+                if(data.remainingCoolTime==null){//아예처음생성시 게임 내 데이터 배열 길이 맞춰줌.
+                    data.remainingCoolTime = new float[BuffManager.instance.buffs.Count];
+                    data.remainingDuration = new float[BuffManager.instance.buffs.Count];
+                    data.count = new int[BuffManager.instance.buffs.Count];
+                }
+                else if(data.remainingCoolTime.Length!=BuffManager.instance.buffs.Count){//게임내 배열 길이 증가한 경우 저장된값들까지만 로드
                     for(int i=0;i<BuffManager.instance.buffs.Count;i++){
                         BuffManager.instance.buffs[i].remainingCoolTime = data.remainingCoolTime[i];
                         BuffManager.instance.buffs[i].remainingDuration = data.remainingDuration[i];
                         BuffManager.instance.buffs[i].count = data.count[i];
                     }
-                }
-                else{
                     data.remainingCoolTime = new float[BuffManager.instance.buffs.Count];
                     data.remainingDuration = new float[BuffManager.instance.buffs.Count];
                     data.count = new int[BuffManager.instance.buffs.Count];
+                }
+                else{                    
+                    for(int i=0;i<BuffManager.instance.buffs.Count;i++){
+                        BuffManager.instance.buffs[i].remainingCoolTime = data.remainingCoolTime[i];
+                        BuffManager.instance.buffs[i].remainingDuration = data.remainingDuration[i];
+                        BuffManager.instance.buffs[i].count = data.count[i];
+                    }
                 }
             }
 

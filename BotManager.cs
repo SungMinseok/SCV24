@@ -71,7 +71,7 @@ public class BotManager : MonoBehaviour
     }
     public void LoadBot(){
         
-        Debug.Log(botSaved.Count);
+//        Debug.Log(botSaved.Count);
         //if(botSaved != null){
             StartCoroutine(LoadBotCoroutine());
         //}

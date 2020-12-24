@@ -174,7 +174,7 @@ public class BuildingManager : MonoBehaviour
                     
                     UIManager.instance.SetPopUp("건설이 완료되었습니다 : "+buildings[i].name);
 
-                    if(i==1) UIManager.instance.ActivateLowerUIPanel(1);
+                    if(i==1) UIManager.instance.ActivateLowerUIPanel(2);
                 }
             }
         }
@@ -213,7 +213,7 @@ public class BuildingManager : MonoBehaviour
                     //buildingList[7*i+4].gameObject.SetActive(false);//잠금이미지 비활성화
                     childPanels[i].GetChild(3).gameObject.SetActive(true);//텍스트 활성화
                     buildingsInMap[i].transform.GetChild(1).gameObject.SetActive(true);
-                    if(i==1) UIManager.instance.ActivateLowerUIPanel(1);
+                    if(i==1) UIManager.instance.ActivateLowerUIPanel(2);
                 }
                 else{
                     //Debug.Log(i+"번 건물 미건설");

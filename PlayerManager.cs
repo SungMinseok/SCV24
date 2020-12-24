@@ -57,7 +57,7 @@ public class PlayerManager : MonoBehaviour
     Slider fuelBar;
     Text mineralBar;
     Text rpBar;
-        int calculated = 0;
+        float calculated = 0;
         int calculatedRP = 0;
 
     //public float runSpeed = 4f;
@@ -69,12 +69,13 @@ public class PlayerManager : MonoBehaviour
     //public float miningSpeed = 5f;
     [Header("기타 값 ( Save & Load )")]
     public bool helperDone;
-    public int curMineral;
+    public float curMineral;
     public int curRP;//researchPoint
     public float curFuel;
     [Header("기타 값")]
     public float curSpeed;
     public float bonusSpeed = 1;
+    public float bonusCapacity = 1;
     
     [Header("장비 초기값 ( Fixed )")]
     public float fuelUsagePerWalk = 1f;
@@ -623,12 +624,12 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
             }
             ////Debug.Log("미네랄 업");
             //int temp = curMineral-int.Parse(mineralBar.text);
-            int temp = curMineral-calculated;
+            float temp = curMineral-calculated;
             //Debug.Log(temp);
             if(temp>=10 || temp <=-10){
                 
                 //calculated= (int.Parse(mineralBar.text) + temp/10);
-                calculated= calculated + temp/10;
+                calculated= calculated + (int)(temp/10);
             }
             else{
                 
@@ -692,6 +693,11 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
 
         //     }
         // }
+        if(curFuel<=0){
+            if(BuffManager.instance.autoChargeFuel){
+                BuffManager.instance.AutoChargeFuel();
+            }
+        }
         
         movementDirection = new Vector2(movement.x, movement.y);
         if (movementDirection != Vector2.zero){
@@ -775,6 +781,8 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
             fuelBar.value = 0;
             //canMove = false;
             animator.SetFloat("Speed", 0f);
+
+
             //Debug.Log("앵꼬");
         }
         else if(curFuel>maxFuel){
@@ -792,19 +800,19 @@ Instantiate(effect, mineral.transform.position, Quaternion.identity);
         
     }
 
-    public void HandleMineral(int amount = 0,bool floating = true){
+    public void HandleMineral(float amount = 0,bool floating = true){
         //int temp0 = curMineral;
         //int preMineral = curMineral;
         if(amount==0){
-                
+            float temp = Mathf.Ceil(capacity * bonusCapacity);
             switch(packageType){
                 case PackageType.normal :
-                    curMineral += capacity;
+                    curMineral += temp;
                     break;
                 default :
                     break;
             }
-            if(floating) PrintFloating("+ "+capacity.ToString());
+            if(floating) PrintFloating("+ "+temp.ToString());
         }
         else{
             curMineral += amount;
