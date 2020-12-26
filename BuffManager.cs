@@ -5,16 +5,17 @@ using UnityEngine.UI;
 [System.Serializable]
 public class Buff{
     public string name;
-    public float coolTime;
-    public float duration;
-    //public int count;//DB저장
     public Transform btn;
-    public Transform buffImage;//상단UI표시
+    public float coolTime;
+    //public int count;//DB저장
     public float remainingCoolTime;
-    public float remainingDuration;
-    public int count;//DB저장
     //public int remainingCount;
-    
+    [Space(5)]
+    public Transform buffImage;//상단UI표시
+    public float duration;
+    public float remainingDuration;
+    [Space(5)]
+    public int count;//DB저장
 }
 public class BuffManager : MonoBehaviour
 {
@@ -36,6 +37,7 @@ public class BuffManager : MonoBehaviour
     [Header("랜덤박스 UI")]
     public GameObject randomBoxPanel;
     public Text randomAmountText;
+    public Text bonusAmountText;
     public GameObject randomOk;
     public Image randomImage;
     public Sprite mineral;
@@ -46,6 +48,8 @@ public class BuffManager : MonoBehaviour
     public GameObject dropbox;
     public BoxCollider2D mapBound;
     public float dropshipSpeed = 5f;
+    public float dropshipCoolTime;
+    public float dropshipRemainingCoolTime;
     [Header("RP")]
     public BoxCollider2D[] createArea;
     public float rpCoolTime;
@@ -65,12 +69,24 @@ public class BuffManager : MonoBehaviour
         boxCountText.text = "x " + boxCount.ToString();
 
         for(int i=0; i< buffs.Count;i++){
-            var temp = buffs[i].btn.GetChild(buffs[i].btn.childCount-1);
-            if(temp.gameObject.name == "LeftCount"){//카운트가 있는 경우(스팀팩)
-                temp.GetComponent<Text>().text = buffs[i].count.ToString();
+            if(buffs[i].count != -1){
                     
-                    //buffs[i].btn.GetChild(buffs[i].btn.childCount-2).GetComponent<Text>().text
+                //var temp = buffs[i].btn.GetChild(buffs[i].btn.childCount-1).GetComponent<Text>();
+                //if(temp.gameObject.name == "LeftCount"){//카운트가 있는 경우(스팀팩)
+                buffs[i].btn.GetChild(buffs[i].btn.childCount-1).GetComponent<Text>().text = buffs[i].count.ToString();
             }
+            else{
+                buffs[i].btn.GetChild(buffs[i].btn.childCount-1).gameObject.SetActive(false);
+            }
+
+            if(buffs[i].buffImage != null){
+                buffs[i].buffImage.gameObject.SetActive(false);
+            }
+            
+
+                
+                    //buffs[i].btn.GetChild(buffs[i].btn.childCount-2).GetComponent<Text>().text
+            //}
         }
 
         StartCoroutine(CreateRandomRPCoroutine());
@@ -86,11 +102,18 @@ public class BuffManager : MonoBehaviour
             if(buffs[i].name == name){
                 //var temp = buffs[i].btn.GetChild(buffs[i].btn.childCount-1);
                 //if(temp.gameObject.name == "LeftCount"){//카운트가 있는 경우(스팀팩)
-                if(buffs[i].count > 0){
+                if(buffs[i].count > 0 || buffs[i].count==-1 ){
 
-                    buffs[i].btn.GetChild(buffs[i].btn.childCount-1).GetComponent<Text>().text = (--buffs[i].count).ToString();
                     StartCoroutine(BuffCoolTimeCoroutine(buffs[i]));
-                    StartCoroutine(BuffCoroutine(buffs[i]));
+
+                    if(buffs[i].duration!= -1){
+                        
+                        StartCoroutine(BuffCoroutine(buffs[i]));
+                    }
+                    if(buffs[i].count != -1){
+                    buffs[i].btn.GetChild(buffs[i].btn.childCount-1).GetComponent<Text>().text = (--buffs[i].count).ToString();
+
+                    }
                 }
                 else{
 
@@ -157,7 +180,9 @@ public class BuffManager : MonoBehaviour
             case "Stimpack1" : 
                 SetMineralSize(1.5f);
                 break;
-
+            case "Dropship" : 
+                CreateDropship();
+                break;
             default :
                 break;
         }
@@ -270,30 +295,46 @@ public class BuffManager : MonoBehaviour
     public void SetRandomBox(){ //획득 가능 랜덤 상자 클릭
         if(boxCount >0){
             //ActivateBuff("Center");
-        recallEffect.SetActive(true);
-        randomBoxPanel.SetActive(true);
+            recallEffect.SetActive(true);
+            randomBoxPanel.SetActive(true);
             //boxCount --;
             boxCountText.text = "x "+(--boxCount).ToString();
                 
             SoundManager.instance.Play("recall");
             ranType = Random.Range(0,2);//0,1
             
-            if(ranType == 0){ //미네랄 50000~100000
-                
-                ranNum = Random.Range(50,100);
-                randomImage.sprite = mineral;
-                randomAmountText.text = (ranNum * 1000).ToString();
-            }
-            else if(ranType == 1){//연구점수 200~2000
+            if(ranType == 0){ //미네랄 (용접기레벨+적재함레벨+엔진레벨) * (100~200) * 2
 
-                ranNum = Random.Range(10,100); 
+                
+                ranNum = Random.Range(100,201);
+                randomImage.sprite = mineral;
+                float tempAmount = (PlayerManager.instance.weldingLevel+PlayerManager.instance.bodyLevel+PlayerManager.instance.engineLevel)
+                *(ranNum) * 2;
+                randomAmountText.text = tempAmount.ToString();
+                bonusAmountText.text = (((float)(PlayerManager.instance.moreSupply * 5) / 100 ) * tempAmount ).ToString();
+            }
+            else if(ranType == 1){//연구점수 현재 연구점수 획득량(100) * (3~5)
+
+                ranNum = Random.Range(3,6); 
                 randomImage.sprite = rp;
-                randomAmountText.text = (ranNum * 20).ToString();
+                float tempAmount = (100 * (ranNum));
+                randomAmountText.text = tempAmount.ToString();
+                bonusAmountText.text = (((float)(PlayerManager.instance.moreSupply * 5) / 100 ) * tempAmount ).ToString();
+
+            }
+            else if(ranType ==2){//스팀팩
+
+                ranNum = Random.Range(3,6); 
+                
+                randomAmountText.text = (PlayerManager.instance.fuelLevel/10 * (ranNum)).ToString();
+                bonusAmountText.text = (PlayerManager.instance.moreSupply).ToString();
+
             }
             
 
             Invoke("DelayOkBtn",0.7f);
         }
+
     }
     public void DelayOkBtn(){
         SoundManager.instance.Play("rescue");
@@ -301,13 +342,17 @@ public class BuffManager : MonoBehaviour
     }
     public void GetRandomBox(){ //확인 클릭
         if(ranType ==0 ){
-
-            PlayerManager.instance.HandleMineral(int.Parse(randomAmountText.text));
+            PlayerManager.instance.HandleMineral(int.Parse(randomAmountText.text) + int.Parse(bonusAmountText.text) );
         }
         else if(ranType ==1){
-            PlayerManager.instance.HandleRP(int.Parse(randomAmountText.text));
+            PlayerManager.instance.HandleRP(int.Parse(randomAmountText.text) + int.Parse(bonusAmountText.text) );
+        }
+        else if (ranType==2){
 
         }
+        
+        randomAmountText.text = "";
+        bonusAmountText.text = "";
     }
 
     public void CreateDropship(){
@@ -400,7 +445,21 @@ public class BuffManager : MonoBehaviour
         UIManager.instance.ActivateLowerUIPanel(3);
         UIManager.instance.ActivateLowerUIPanel(4);
 
+        BuildingManager.instance.BuildingStateCheck(1);
+        BuildingManager.instance.BuildingStateCheck(4);
+
+
+
         for(int i=0;i<buffs.Count;i++){
+
+
+            // if(buffs[i].buffImage!=null){
+
+            //         buffs[i].buffImage.gameObject.SetActive(true);
+            // }
+
+
+
             if(buffs[i].remainingCoolTime!=buffs[i].coolTime){
                 StartCoroutine(BuffCoolTimeCoroutine(buffs[i]));
             }
@@ -409,12 +468,10 @@ public class BuffManager : MonoBehaviour
                 //buffs[i].btn.GetChild(buffs[i].btn.childCount-2).GetComponent<Image>().fillAmount = 0;
                 //buffs[i].btn.GetChild(buffs[i].btn.childCount-2).transform.GetChild(0).GetComponent<Text>().text ;
             }
-            if(buffs[i].remainingDuration!=buffs[i].duration){
-                StartCoroutine(BuffCoroutine(buffs[i]));
-            }
-            else{
+            if(buffs[i].duration!=-1  && buffs[i].remainingDuration!=buffs[i].duration){
                 
-                buffs[i].buffImage.gameObject.SetActive(false);
+                //buffs[i].buffImage.gameObject.SetActive(true);
+                StartCoroutine(BuffCoroutine(buffs[i]));
             }
         }
     }
@@ -525,4 +582,38 @@ public class BuffManager : MonoBehaviour
         }
         autoCharging = false;
     }
+
+    //     IEnumerator DropCoolTimeCoroutine(){
+    //     buff.btn.GetComponent<Button>().interactable = false;
+    //     var coolTimeImage = buff.btn.GetChild(buff.btn.childCount-2).GetComponent<Image>();
+    //     var coolTimeText = buff.btn.GetChild(buff.btn.childCount-2).transform.GetChild(0).GetComponent<Text>();
+    //     //buff.btn.GetComponent<Button>().interactable = false;//centerBuffBtn.interactable = false;
+    //     coolTimeImage.gameObject.SetActive(true);//centerBuffImg.gameObject.SetActive(true);
+    //     coolTimeText.text = buff.coolTime.ToString();//centerBuffText.text = buff.time.ToString();
+        
+        
+
+    //     while(buff.remainingCoolTime>0f){  
+            
+    //         // buff.time--;
+
+    //        // Debug.Log("TempTime : "+ tempTime);
+    //         // centerBuffText.text = buff.time.ToString();
+    //         // centerBuffImg.fillAmount = (float)buff.time / (float)full ;
+    //         // Debug.Log(centerBuffImg.fillAmount);
+    //         // yield return new WaitForSeconds(1f);
+
+    //         buff.remainingCoolTime -= Time.deltaTime;
+            
+    //         coolTimeText.text = (Mathf.CeilToInt(buff.remainingCoolTime)).ToString();//centerBuffText.text = (Mathf.CeilToInt(tempTime)).ToString();
+    //         coolTimeImage.fillAmount = buff.remainingCoolTime / buff.coolTime ;
+    //         yield return new WaitForFixedUpdate();
+    //     }
+
+    //     //centerBuffBtn.interactable = true;
+    //     buff.btn.GetComponent<Button>().interactable = true;
+    //     coolTimeImage.gameObject.SetActive(false);//centerBuffImg.gameObject.SetActive(false);
+
+    //     buff.remainingCoolTime = buff.coolTime;
+    // }    
 }

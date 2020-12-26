@@ -142,6 +142,13 @@ public class PlayerManager : MonoBehaviour
 
 
 
+    [Header("연구 단계")]
+    public int fastCall;
+    public int moreSupply;
+    public int maxAccumulatedRP;
+    public int nowAccumulatedRP;
+    public int fastAccumlation;
+
     
     // public Texture2D characterTexture2D;
     // public Sprite[] characterSprites;

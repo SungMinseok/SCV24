@@ -2,6 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+[System.Serializable]
+public class Tech{
+    public string name;
+    public Text mainText;
+    public Text desText;
+    public Text priceText;
+    public float priceDefault;  //기본가격
+    public float delta;
+    public float priceDelta;
+}
 
 public class UIManager : MonoBehaviour
 {
@@ -52,6 +62,15 @@ public class UIManager : MonoBehaviour
     
     [Header("UI Bundle ( Fix Camera )")]
     public GameObject[] uis;
+
+    [Header("공항")]
+    public Tech[] teches_Starport;
+    [Header("과학실")]
+    public Tech[] teches_Science;
+    // public Text fastCallMainText;
+    // public Text fastCallDesText;
+    // public Text moreSupplyMainText;
+    // public Text moreSupplyDesText;
     
     void Awake(){
         instance = this;
@@ -307,4 +326,63 @@ public class UIManager : MonoBehaviour
         lowerUI[num].transform.GetChild(2).gameObject.SetActive(false);
     }
 
+    public void RefreshStarportPanel(){
+        //초기 설정
+        BuffManager.instance.buffs[2].coolTime = (3600-PlayerManager.instance.fastCall*60*teches_Starport[0].delta);
+
+        teches_Starport[0].mainText.text = "신속 호출 " + PlayerManager.instance.fastCall + "단계";
+        if(PlayerManager.instance.fastCall<20){
+
+            teches_Starport[0].desText.text = "보급선 호출 주기 : "+(60-PlayerManager.instance.fastCall*teches_Starport[0].delta)+"분 > "+(60-(PlayerManager.instance.fastCall+1)*teches_Starport[0].delta)+"분";
+            teches_Starport[0].priceText.text = string.Format("{0:#,###0}", teches_Starport[0].priceDefault + teches_Starport[0].priceDelta * PlayerManager.instance.fastCall);//(tempLevel*nowUpgradePanel.priceDelta));
+        }
+        else{
+
+            teches_Starport[0].desText.text = "보급선 호출 주기 : "+(60-PlayerManager.instance.fastCall*teches_Starport[0].delta)+"분";
+            teches_Starport[0].priceText.text = "N/A";
+        }
+
+        teches_Starport[1].mainText.text = "알찬 구성품 " + PlayerManager.instance.moreSupply + "단계";
+        if(PlayerManager.instance.moreSupply<20){
+
+            teches_Starport[1].desText.text = "미네랄/연구점수 : +"+(PlayerManager.instance.moreSupply*5)+"% > +"+((PlayerManager.instance.moreSupply+1)*5)+"%\n스팀팩 : +"+(PlayerManager.instance.moreSupply)+"개 > +"+((PlayerManager.instance.moreSupply+1))+"개";
+            teches_Starport[1].priceText.text = string.Format("{0:#,###0}", teches_Starport[1].priceDefault + teches_Starport[1].priceDelta * PlayerManager.instance.moreSupply);//(tempLevel*nowUpgradePanel.priceDelta));
+        }
+        else{
+
+            teches_Starport[1].desText.text = "미네랄/연구점수 : +"+(PlayerManager.instance.moreSupply*5)+"%\n스팀팩 : +"+(PlayerManager.instance.moreSupply*5)+"개";
+            teches_Starport[1].priceText.text = "N/A";
+        }
+    }
+    public float Pibo(float a, float b){
+        return a*b;
+    }
+    public void UpgradeFastCall(){
+
+        PlayerManager.instance.fastCall ++;
+        RefreshStarportPanel();
+    }
+    public void UpgradeMoreSupply(){
+        PlayerManager.instance.moreSupply ++;
+        RefreshStarportPanel();
+    }    
+    public void RefreshSciencePanel(){
+        //초기 설정
+        BuffManager.instance.buffs[2].coolTime = (3600-PlayerManager.instance.fastCall*60*teches_Starport[0].delta);
+
+        teches_Starport[0].mainText.text = "신속 호출 " + PlayerManager.instance.fastCall + "단계";
+        teches_Starport[0].desText.text = "보급선 호출 주기가 짧아집니다. ( "+(60-PlayerManager.instance.fastCall*teches_Starport[0].delta)+"분 > "+(60-(PlayerManager.instance.fastCall+1)*teches_Starport[0].delta)+"분 )";
+        teches_Starport[0].priceText.text = string.Format("{0:#,###0}", Pibo(teches_Starport[0].priceDefault + (float)PlayerManager.instance.fastCall,teches_Starport[0].priceDefault +(float)(PlayerManager.instance.fastCall+1)));//(tempLevel*nowUpgradePanel.priceDelta));
+        teches_Starport[1].mainText.text = "알찬 구성품 " + PlayerManager.instance.moreSupply + "단계";
+        teches_Starport[1].desText.text = "미네랄/연구점수 : +"+(PlayerManager.instance.moreSupply*5)+"% > +"+((PlayerManager.instance.moreSupply+1))+"%\n스팀팩 : +"+(PlayerManager.instance.moreSupply*5)+"개 > +"+((PlayerManager.instance.moreSupply+1))+"개";
+        teches_Starport[1].priceText.text = string.Format("{0:#,###0}", Pibo(teches_Starport[1].priceDefault + (float)PlayerManager.instance.fastCall,teches_Starport[1].priceDefault +(float)(PlayerManager.instance.fastCall+1)));//(tempLevel*nowUpgradePanel.priceDelta));
+    }
+    public void UpgradeFastCollect(){
+        PlayerManager.instance.fastCall ++;
+        RefreshStarportPanel();
+    }
+    // public void UpgradeMoreSupply(){
+    //     PlayerManager.instance.moreSupply ++;
+    //     RefreshStarportPanel();
+    // }
 }

@@ -239,7 +239,7 @@ public class DBManager : MonoBehaviour
                     data.count = new int[BuffManager.instance.buffs.Count];
                 }
                 else if(data.remainingCoolTime.Length!=BuffManager.instance.buffs.Count){//게임내 배열 길이 증가한 경우 저장된값들까지만 로드
-                    for(int i=0;i<BuffManager.instance.buffs.Count;i++){
+                    for(int i=0;i<data.remainingCoolTime.Length;i++){
                         BuffManager.instance.buffs[i].remainingCoolTime = data.remainingCoolTime[i];
                         BuffManager.instance.buffs[i].remainingDuration = data.remainingDuration[i];
                         BuffManager.instance.buffs[i].count = data.count[i];
